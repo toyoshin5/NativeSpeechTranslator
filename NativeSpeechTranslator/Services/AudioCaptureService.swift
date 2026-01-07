@@ -36,9 +36,10 @@ actor AudioCaptureService {
         let inputNode = engine.inputNode
         let bus = 0
         let inputFormat = inputNode.inputFormat(forBus: bus)
+        // 16-bit Int format, 16kHz, Mono which is standard for speech recognition
         guard let outputFormat = AVAudioFormat(commonFormat: .pcmFormatInt16,
-                                               sampleRate: inputFormat.sampleRate,
-                                               channels: inputFormat.channelCount,
+                                               sampleRate: 16000.0,
+                                               channels: 1,
                                                interleaved: false) else {
             throw NSError(domain: "AudioCaptureService", code: -1, userInfo: [NSLocalizedDescriptionKey: "Failed to create output audio format"])
         }

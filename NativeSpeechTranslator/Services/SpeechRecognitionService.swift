@@ -13,13 +13,10 @@ struct TranscriptionResult: Identifiable, Equatable {
 @available(macOS 26, *)
 actor SpeechRecognitionService {
     
-    /// シングルトンインスタンス
     static let shared = SpeechRecognitionService()
     
-    /// 分析タスク
     private var analysisTask: Task<Void, Never>?
     
-    /// 初期化
     private init() {}
     
     /// 音声認識を開始します。
@@ -30,24 +27,17 @@ actor SpeechRecognitionService {
         AsyncStream { continuation in
             analysisTask = Task {
                 do {
-                    // Step 1: Modules
-                    // ユーザーのサンプルコードに従い、ロケールチェックとプリセット設定
                     guard let locale = await SpeechTranscriber.supportedLocale(equivalentTo: Locale.current) else {
                         print("Supported locale not found")
                         continuation.finish()
                         return
                     }
-                    // .offlineTranscription が使えるか確認（サンプルコードにはある）
                     let transcriber = SpeechTranscriber(locale: locale, preset: .progressiveTranscription)
-                    
-                    // Step 2: Assets
-                    // アセットのダウンロードとインストール
+
                     if let installationRequest = try await AssetInventory.assetInstallationRequest(supporting: [transcriber]) {
                         try await installationRequest.downloadAndInstall()
                     }
                     
-                    // Step 3: Input sequence
-                    // AnalyzerInputのストリームを作成
                     let (inputSequence, inputBuilder) = AsyncStream.makeStream(of: AnalyzerInput.self)
                     
                     // Step 4: Analyzer

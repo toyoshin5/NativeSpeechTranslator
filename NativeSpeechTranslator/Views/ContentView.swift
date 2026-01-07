@@ -43,7 +43,6 @@ struct ContentView: View {
             
             Divider()
             
-            // コンテンツ領域（タイムライン）
             ScrollView {
                 LazyVStack(spacing: 0) {
                     ForEach(viewModel.transcripts) { item in
