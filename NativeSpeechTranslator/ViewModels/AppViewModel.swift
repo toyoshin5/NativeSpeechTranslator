@@ -8,9 +8,10 @@ class AppViewModel: ObservableObject {
 
     struct TranscriptItem: Identifiable {
         let id = UUID()
-        let original: String
+        var original: String
         var translation: String?
         var isTranslating: Bool = false
+        var isFinal: Bool = false
     }
 
     @Published var transcripts: [TranscriptItem] = []
@@ -163,11 +164,33 @@ class AppViewModel: ObservableObject {
 
     private func handleRecognitionResult(_ result: TranscriptionResult) {
         if result.isFinal {
-            let item = TranscriptItem(original: result.text, translation: nil, isTranslating: true)
-            transcripts.append(item)
-
-            let index = transcripts.count - 1
-            translate(text: result.text, at: index)
+            if let lastIndex = transcripts.indices.last, !transcripts[lastIndex].isFinal {
+                transcripts[lastIndex].original = result.text
+                transcripts[lastIndex].isFinal = true
+                transcripts[lastIndex].isTranslating = true
+                translate(text: result.text, at: lastIndex)
+            } else {
+                let item = TranscriptItem(
+                    original: result.text,
+                    translation: nil,
+                    isTranslating: true,
+                    isFinal: true
+                )
+                transcripts.append(item)
+                translate(text: result.text, at: transcripts.count - 1)
+            }
+        } else {
+            if let lastIndex = transcripts.indices.last, !transcripts[lastIndex].isFinal {
+                transcripts[lastIndex].original = result.text
+            } else {
+                let item = TranscriptItem(
+                    original: result.text,
+                    translation: nil,
+                    isTranslating: false,
+                    isFinal: false
+                )
+                transcripts.append(item)
+            }
         }
     }
 
