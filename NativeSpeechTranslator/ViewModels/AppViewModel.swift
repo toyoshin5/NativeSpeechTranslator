@@ -23,8 +23,8 @@ class AppViewModel: ObservableObject {
 
     @Published var selectedDeviceID: String? = nil {
         didSet {
-            // デバイス変更時の処理（再起動など）は必要に応じて実装
-            // 現状はシンプルな実装とする
+            guard oldValue != selectedDeviceID else { return }
+            applyDeviceChange()
         }
     }
 
@@ -32,38 +32,76 @@ class AppViewModel: ObservableObject {
     private let recognitionService = SpeechRecognitionService.shared
     private let translationService = TranslationService.shared
 
-    /// 初期化
+    private var levelMonitoringTask: Task<Void, Never>?
+
     init() {
         self.inputDevices = audioService.getAvailableDevices()
         if let defaultDevice = inputDevices.first {
             self.selectedDeviceID = defaultDevice.uniqueID
         }
+        startStandaloneLevelMonitoring()
     }
 
-    /// 録音と認識を開始します。
+    private func applyDeviceChange() {
+        Task {
+            await audioService.setInputDevice(deviceID: selectedDeviceID)
+
+            if isRecording {
+                restartRecording()
+            } else {
+                restartStandaloneLevelMonitoring()
+            }
+        }
+    }
+
+    private func startStandaloneLevelMonitoring() {
+        levelMonitoringTask?.cancel()
+        levelMonitoringTask = Task {
+            let levelStream = await audioService.startLevelMonitoringOnly()
+            for await level in levelStream {
+                guard !Task.isCancelled else { break }
+                self.audioLevel = level
+            }
+        }
+    }
+
+    private func stopStandaloneLevelMonitoring() {
+        levelMonitoringTask?.cancel()
+        levelMonitoringTask = nil
+        Task {
+            await audioService.stopLevelMonitoringOnly()
+        }
+    }
+
+    private func restartStandaloneLevelMonitoring() {
+        stopStandaloneLevelMonitoring()
+        Task {
+            try? await Task.sleep(nanoseconds: 100_000_000)
+            startStandaloneLevelMonitoring()
+        }
+    }
+
     func startRecording() {
         guard !isRecording else { return }
         isRecording = true
+
+        stopStandaloneLevelMonitoring()
 
         Task {
             do {
                 let audioStream = try await audioService.startStream()
 
-                // 音声認識の開始
                 let transcriptionStream = await recognitionService.startRecognition(
                     audioStream: audioStream)
 
-                // レベルモニタリングの開始
                 let levelStream = await audioService.startLevelMonitoring()
 
-                // 音声認識結果のハンドリング
                 Task {
                     for await result in transcriptionStream {
                         await handleRecognitionResult(result)
                     }
                 }
 
-                // レベルストリームのハンドリング
                 Task {
                     for await level in levelStream {
                         self.audioLevel = level
@@ -73,6 +111,7 @@ class AppViewModel: ObservableObject {
             } catch {
                 print("Error starting recording: \(error)")
                 isRecording = false
+                startStandaloneLevelMonitoring()
             }
         }
     }
@@ -83,24 +122,45 @@ class AppViewModel: ObservableObject {
             await audioService.stopStream()
             await recognitionService.stopRecognition()
             isRecording = false
+            startStandaloneLevelMonitoring()
         }
     }
 
     private func restartRecording() {
-        stopRecording()
-        // TODO: デバイス変更の反映ロジックが必要であればAudioServiceへ伝達
-        // 注: AudioCaptureServiceのAPIをデバイス指定に対応させる必要があるが、今回は簡易的に再起動のみ
-
-        // 少し待ってから再開
         Task {
-            try? await Task.sleep(nanoseconds: 500_000_000)
-            startRecording()
+            await audioService.stopStream()
+            await recognitionService.stopRecognition()
+
+            try? await Task.sleep(nanoseconds: 300_000_000)
+
+            do {
+                let audioStream = try await audioService.startStream()
+
+                let transcriptionStream = await recognitionService.startRecognition(
+                    audioStream: audioStream)
+
+                let levelStream = await audioService.startLevelMonitoring()
+
+                Task {
+                    for await result in transcriptionStream {
+                        await handleRecognitionResult(result)
+                    }
+                }
+
+                Task {
+                    for await level in levelStream {
+                        self.audioLevel = level
+                    }
+                }
+
+            } catch {
+                print("Error restarting recording: \(error)")
+                isRecording = false
+                startStandaloneLevelMonitoring()
+            }
         }
     }
 
-    /// 音声認識結果を処理
-    ///
-    /// - Parameter result: 認識結果
     private func handleRecognitionResult(_ result: TranscriptionResult) {
         if result.isFinal {
             let item = TranscriptItem(original: result.text, translation: nil, isTranslating: true)
@@ -108,21 +168,13 @@ class AppViewModel: ObservableObject {
 
             let index = transcripts.count - 1
             translate(text: result.text, at: index)
-        } else {
-            // 途中経過を表示したい場合はここにロジックを追加
         }
     }
 
-    /// 指定されたインデックスのテキストを翻訳
-    ///
-    /// - Parameters:
-    ///   - text: 翻訳元のテキスト
-    ///   - index: リスト内のインデックス
     private func translate(text: String, at index: Int) {
         Task {
             let translation = await translationService.translate(text)
 
-            // UI更新
             if index < transcripts.count {
                 transcripts[index].translation = translation
                 transcripts[index].isTranslating = false

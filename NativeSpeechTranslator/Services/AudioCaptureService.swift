@@ -1,109 +1,151 @@
 import AVFoundation
+import CoreAudio
 import Foundation
 
 actor AudioCaptureService {
 
     private let engine = AVAudioEngine()
-
-    private(set) var currentInputDevice: AVCaptureDevice?
-
+    private(set) var currentInputDeviceID: String?
     private(set) var isStreaming: Bool = false
-
+    private(set) var isLevelMonitoringOnly: Bool = false
     private var streamContinuation: AsyncStream<(AVAudioPCMBuffer, AVAudioTime)>.Continuation?
+    private var levelContinuation: AsyncStream<Float>.Continuation?
 
     static let shared = AudioCaptureService()
-
     private init() {}
 
-    /// 音声入力を開始し、バッファの非同期ストリームを返します。
-    ///
-    /// - Returns: `AVAudioPCMBuffer` と `AVAudioTime` の非同期ストリーム。
-    /// - Throws: 音声エンジンの開始に失敗した場合にエラーをスローします。
-    func startStream() throws -> AsyncStream<(AVAudioPCMBuffer, AVAudioTime)> {
-        let inputNode = engine.inputNode
-        let bus = 0
-        let format = inputNode.inputFormat(forBus: bus)
+    // MARK: - Device Selection
 
+    func setInputDevice(deviceID: String?) {
+        guard currentInputDeviceID != deviceID, let deviceID else {
+            currentInputDeviceID = deviceID
+            return
+        }
+        currentInputDeviceID = deviceID
+        applySystemDefaultInputDevice(uid: deviceID)
+    }
+
+    private nonisolated func applySystemDefaultInputDevice(uid: String) {
+        var audioDeviceID: AudioDeviceID = 0
+        var size = UInt32(MemoryLayout<AudioDeviceID>.size)
+        var cfUID: CFString = uid as CFString
+
+        var translateAddress = AudioObjectPropertyAddress(
+            mSelector: kAudioHardwarePropertyTranslateUIDToDevice,
+            mScope: kAudioObjectPropertyScopeGlobal,
+            mElement: kAudioObjectPropertyElementMain
+        )
+
+        guard
+            AudioObjectGetPropertyData(
+                AudioObjectID(kAudioObjectSystemObject),
+                &translateAddress,
+                UInt32(MemoryLayout<CFString>.size),
+                &cfUID,
+                &size,
+                &audioDeviceID
+            ) == noErr
+        else { return }
+
+        var defaultAddress = AudioObjectPropertyAddress(
+            mSelector: kAudioHardwarePropertyDefaultInputDevice,
+            mScope: kAudioObjectPropertyScopeGlobal,
+            mElement: kAudioObjectPropertyElementMain
+        )
+
+        AudioObjectSetPropertyData(
+            AudioObjectID(kAudioObjectSystemObject),
+            &defaultAddress,
+            0,
+            nil,
+            UInt32(MemoryLayout<AudioDeviceID>.size),
+            &audioDeviceID
+        )
+    }
+
+    // MARK: - Audio Streaming
+
+    func startStream() throws -> AsyncStream<(AVAudioPCMBuffer, AVAudioTime)> {
+        stopLevelMonitoringOnly()
         return AsyncStream { continuation in
             self.streamContinuation = continuation
-
-            inputNode.removeTap(onBus: bus)
-            inputNode.installTap(onBus: bus, bufferSize: 1024, format: format) { buffer, time in
+            self.installTap { buffer, time in
                 guard self.isStreaming else { return }
                 self.processAudioLevel(buffer: buffer)
-
                 continuation.yield((buffer, time))
             }
-
-            do {
-                if !self.engine.isRunning {
-                    try self.engine.start()
-                }
-                self.isStreaming = true
-            } catch {
-                print("AudioEngine start error: \(error)")
-                continuation.finish()
-                self.isStreaming = false
-            }
+            self.startEngineIfNeeded()
+            self.isStreaming = true
         }
     }
 
     func stopStream() {
-        engine.stop()
-        engine.inputNode.removeTap(onBus: 0)
+        stopEngine()
         streamContinuation?.finish()
         streamContinuation = nil
-
         levelContinuation?.finish()
         levelContinuation = nil
-
         isStreaming = false
     }
 
     // MARK: - Audio Levels
 
-    /// 音声レベル（0.0 - 1.0）の継続
-    private var levelContinuation: AsyncStream<Float>.Continuation?
-
-    /// 音声レベルのモニタリングを開始し、レベルの非同期ストリームを返します。
-    ///
-    /// - Returns: 音声レベル（RMS, 0.0 - 1.0）の非同期ストリーム。
     func startLevelMonitoring() -> AsyncStream<Float> {
-        AsyncStream { continuation in
-            self.levelContinuation = continuation
+        AsyncStream { self.levelContinuation = $0 }
+    }
+
+    func startLevelMonitoringOnly() -> AsyncStream<Float> {
+        guard !isStreaming && !isLevelMonitoringOnly else {
+            return startLevelMonitoring()
         }
+        installTap { buffer, _ in self.processAudioLevel(buffer: buffer) }
+        startEngineIfNeeded()
+        isLevelMonitoringOnly = true
+        return AsyncStream { self.levelContinuation = $0 }
+    }
+
+    func stopLevelMonitoringOnly() {
+        guard isLevelMonitoringOnly else { return }
+        stopEngine()
+        levelContinuation?.finish()
+        levelContinuation = nil
+        isLevelMonitoringOnly = false
     }
 
     private func processAudioLevel(buffer: AVAudioPCMBuffer) {
-        let channelData = buffer.floatChannelData
+        guard let channelData = buffer.floatChannelData, buffer.frameLength > 0 else { return }
         let channelCount = Int(buffer.format.channelCount)
         let frameLength = Int(buffer.frameLength)
 
-        guard let channelData = channelData, frameLength > 0 else { return }
-
         var totalRms: Float = 0.0
-
         for i in 0..<channelCount {
-            let channel = channelData[i]
-            var channelSum: Float = 0.0
-
-            // vDSPを使わずに手動計算 (簡易実装)
-            // 必要に応じてAccelerate frameworkを使うと高速化可能
-            for j in 0..<frameLength {
-                let sample = channel[j]
-                channelSum += sample * sample
-            }
-
-            totalRms += sqrt(channelSum / Float(frameLength))
+            var sum: Float = 0.0
+            for j in 0..<frameLength { sum += channelData[i][j] * channelData[i][j] }
+            totalRms += sqrt(sum / Float(frameLength))
         }
-
-        let avgRms = totalRms / Float(channelCount)
-
-        // 扱いやすいように少し増幅し、0.0-1.0にクランプ
-        let amplifiedLevel = min(max(avgRms * 5.0, 0.0), 1.0)
-
-        levelContinuation?.yield(amplifiedLevel)
+        levelContinuation?.yield(min(totalRms / Float(channelCount) * 5.0, 1.0))
     }
+
+    // MARK: - Engine Helpers
+
+    private func installTap(handler: @escaping (AVAudioPCMBuffer, AVAudioTime) -> Void) {
+        let inputNode = engine.inputNode
+        inputNode.removeTap(onBus: 0)
+        inputNode.installTap(
+            onBus: 0, bufferSize: 1024, format: inputNode.inputFormat(forBus: 0), block: handler)
+    }
+
+    private func startEngineIfNeeded() {
+        guard !engine.isRunning else { return }
+        do { try engine.start() } catch { print("AudioEngine start error: \(error)") }
+    }
+
+    private func stopEngine() {
+        engine.stop()
+        engine.inputNode.removeTap(onBus: 0)
+    }
+
+    // MARK: - Device Discovery
 
     nonisolated func getAvailableDevices() -> [AVCaptureDevice] {
         AVCaptureDevice.DiscoverySession(
