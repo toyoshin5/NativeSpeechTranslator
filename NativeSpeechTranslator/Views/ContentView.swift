@@ -1,15 +1,15 @@
-import SwiftUI
 import AVFoundation
+import SwiftUI
 
 /// アプリケーションのメイン画面。
 ///
 /// 音声入力デバイスの選択、認識結果の表示、録音コントロールを提供します。
 @available(macOS 26, *)
 struct ContentView: View {
-    
+
     /// ViewModel
     @StateObject private var viewModel = AppViewModel()
-    
+
     var body: some View {
         VStack(spacing: 0) {
             // ヘッダー領域
@@ -21,14 +21,14 @@ struct ContentView: View {
                 }
                 .pickerStyle(MenuPickerStyle())
                 .frame(width: 250)
-                
+
                 // マイク入力ビジュアライザー
                 AudioVisualizerView(level: viewModel.audioLevel)
                     .frame(width: 80, height: 20)
                     .padding(.leading, 8)
-                
+
                 Spacer()
-                
+
                 // ステータスインジケータ
                 if viewModel.isRecording {
                     Label("聞き取り中", systemImage: "recordingtape")
@@ -40,9 +40,9 @@ struct ContentView: View {
             }
             .padding()
             .background(Color(NSColor.windowBackgroundColor))
-            
+
             Divider()
-            
+
             ScrollView {
                 LazyVStack(spacing: 0) {
                     ForEach(viewModel.transcripts) { item in
@@ -57,9 +57,9 @@ struct ContentView: View {
                 }
             }
             .background(Color(NSColor.controlBackgroundColor))
-            
+
             Divider()
-            
+
             // フッター領域（コントロール）
             HStack {
                 Button(action: {
@@ -73,10 +73,10 @@ struct ContentView: View {
                         .font(.title2)
                         .padding()
                 }
-                .keyboardShortcut(.space, modifiers: []) // スペースキーで開始/停止
-                
+                .keyboardShortcut(.space, modifiers: [])  // スペースキーで開始/停止
+
                 Spacer()
-                
+
                 Button("ログを保存") {
                     // ログ保存機能（未実装）
                 }
