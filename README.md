@@ -28,14 +28,11 @@ brew install xcodegen
 ### 2. プロジェクトファイルの生成
 
 ```bash
-cd NativeSpeechTranslator
 xcodegen generate
 ```
 
-### 3. Xcodeでビルド
+### 3. ビルド
 
 ```bash
 xcodebuild -scheme NativeSpeechTranslator -destination 'platform=macOS' build
 ```
-
-または、生成された `NativeSpeechTranslator.xcodeproj` をXcodeで開き、ビルド
