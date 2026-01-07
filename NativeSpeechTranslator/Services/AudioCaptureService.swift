@@ -53,6 +53,9 @@ actor AudioCaptureService {
             inputNode.installTap(onBus: bus, bufferSize: 1024, format: inputFormat) { buffer, time in
                 guard self.isStreaming else { return }
                 
+                // Calculate level
+                self.processAudioLevel(buffer: buffer)
+                
                 if let outputBuffer = self.convert(buffer: buffer, using: converter, outputFormat: outputFormat) {
                     continuation.yield((outputBuffer, time))
                 }
@@ -94,10 +97,58 @@ actor AudioCaptureService {
         engine.inputNode.removeTap(onBus: 0)
         streamContinuation?.finish()
         streamContinuation = nil
+        
+        levelContinuation?.finish()
+        levelContinuation = nil
+        
         isStreaming = false
     }
     
-    /// 利用可能な音声入力デバイスのリストを取得します。
+    // MARK: - Audio Levels
+    
+    /// 音声レベル（0.0 - 1.0）の継続
+    private var levelContinuation: AsyncStream<Float>.Continuation?
+    
+    /// 音声レベルのモニタリングを開始し、レベルの非同期ストリームを返します。
+    ///
+    /// - Returns: 音声レベル（RMS, 0.0 - 1.0）の非同期ストリーム。
+    func startLevelMonitoring() -> AsyncStream<Float> {
+        AsyncStream { continuation in
+            self.levelContinuation = continuation
+        }
+    }
+    
+    /// RMS（二乗平均平方根）を計算し、レベルストリームに送信します。
+    private func processAudioLevel(buffer: AVAudioPCMBuffer) {
+        let channelData = buffer.floatChannelData
+        let channelCount = Int(buffer.format.channelCount)
+        let frameLength = Int(buffer.frameLength)
+        
+        guard let channelData = channelData, frameLength > 0 else { return }
+        
+        var totalRms: Float = 0.0
+        
+        for i in 0..<channelCount {
+            let channel = channelData[i]
+            var channelSum: Float = 0.0
+            
+            // vDSPを使わずに手動計算 (簡易実装)
+            // 必要に応じてAccelerate frameworkを使うと高速化可能
+            for j in 0..<frameLength {
+                let sample = channel[j]
+                channelSum += sample * sample
+            }
+            
+            totalRms += sqrt(channelSum / Float(frameLength))
+        }
+        
+        let avgRms = totalRms / Float(channelCount)
+        
+        // 扱いやすいように少し増幅し、0.0-1.0にクランプ
+        let amplifiedLevel = min(max(avgRms * 5.0, 0.0), 1.0)
+        
+        levelContinuation?.yield(amplifiedLevel)
+    }
     ///
     /// - Returns: 利用可能な `AVCaptureDevice` の配列。
     nonisolated func getAvailableDevices() -> [AVCaptureDevice] {

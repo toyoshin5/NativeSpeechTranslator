@@ -22,6 +22,11 @@ struct ContentView: View {
                 .pickerStyle(MenuPickerStyle())
                 .frame(width: 250)
                 
+                // マイク入力ビジュアライザー
+                AudioVisualizerView(level: viewModel.audioLevel)
+                    .frame(width: 80, height: 20)
+                    .padding(.leading, 8)
+                
                 Spacer()
                 
                 // ステータスインジケータ

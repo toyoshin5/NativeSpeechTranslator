@@ -26,13 +26,14 @@ class AppViewModel: ObservableObject {
     /// 利用可能な入力デバイス
     @Published var inputDevices: [AVCaptureDevice] = []
     
-    /// 現在選択されている入力デバイスID
-    @Published var selectedDeviceID: String? {
+    /// マイク入力レベル (0.0 - 1.0)
+    @Published var audioLevel: Float = 0.0
+    
+    /// 選択中のデバイスID
+    @Published var selectedDeviceID: String? = nil {
         didSet {
-            // デバイス変更時の処理（再起動など）はここでトリガー可能
-            if isRecording {
-                restartRecording()
-            }
+            // デバイス変更時の処理（再起動など）は必要に応じて実装
+            // 現状はシンプルな実装とする
         }
     }
     
@@ -43,7 +44,9 @@ class AppViewModel: ObservableObject {
     /// 初期化
     init() {
         self.inputDevices = audioService.getAvailableDevices()
-        self.selectedDeviceID = inputDevices.first?.uniqueID
+        if let defaultDevice = inputDevices.first {
+            self.selectedDeviceID = defaultDevice.uniqueID
+        }
     }
     
     /// 録音と認識を開始します。
@@ -54,11 +57,27 @@ class AppViewModel: ObservableObject {
         Task {
             do {
                 let audioStream = try await audioService.startStream()
-                let recognitionStream = await recognitionService.startRecognition(audioStream: audioStream)
                 
-                for await result in recognitionStream {
-                    handleRecognitionResult(result)
+                // 音声認識の開始
+                let transcriptionStream = await recognitionService.startRecognition(audioStream: audioStream)
+                
+                // レベルモニタリングの開始
+                let levelStream = await audioService.startLevelMonitoring()
+                
+                // 音声認識結果のハンドリング
+                Task {
+                    for await result in transcriptionStream {
+                        await handleRecognitionResult(result)
+                    }
                 }
+                
+                // レベルストリームのハンドリング
+                Task {
+                    for await level in levelStream {
+                        self.audioLevel = level
+                    }
+                }
+                
             } catch {
                 print("Error starting recording: \(error)")
                 isRecording = false
