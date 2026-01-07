@@ -1,4 +1,4 @@
-# NativeSpeechTranslator
+# Native Speech Translator
 
 <img width="1011" height="743" alt=" 2026-01-08 1 54 58" src="https://github.com/user-attachments/assets/7161e124-ce53-41ae-8309-f0e480f2212e" />
 
