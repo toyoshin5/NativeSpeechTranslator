@@ -15,13 +15,10 @@ actor AudioCaptureService {
     /// ストリーミング中かどうか
     private(set) var isStreaming: Bool = false
 
-    /// 音声バッファの継続（Continuation）
     private var streamContinuation: AsyncStream<(AVAudioPCMBuffer, AVAudioTime)>.Continuation?
 
-    /// シングルトンインスタンス
     static let shared = AudioCaptureService()
 
-    /// 初期化
     private init() {}
 
     /// 音声入力を開始し、バッファの非同期ストリームを返します。
