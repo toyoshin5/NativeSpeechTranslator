@@ -4,8 +4,8 @@ struct AudioVisualizerView: View {
     var level: Float
 
     private let barCount = 10
-    private let gain: Float = 5.0 // 入力レベルの増幅
-    private let exponent: Float = 0.4 // 指数
+    private let gain: Float = 5.0  // 入力レベルの増幅
+    private let exponent: Float = 0.4  // 指数
 
     private var normalizedLevel: Float {
         let amplified = min(level * gain, 1.0)

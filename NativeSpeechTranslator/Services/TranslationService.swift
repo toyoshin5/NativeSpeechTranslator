@@ -7,14 +7,15 @@ actor TranslationService {
     static let shared = TranslationService()
 
     private var session: LanguageModelSession?
-    private var pendingRequests: [(text: String, continuation: CheckedContinuation<String, Never>)] = []
+    private var requestsQueue: [(text: String, continuation: CheckedContinuation<String, Never>)] =
+        []
     private var isProcessing = false
 
     private init() {}
 
     func translate(_ text: String) async -> String {
         await withCheckedContinuation { continuation in
-            pendingRequests.append((text: text, continuation: continuation))
+            requestsQueue.append((text: text, continuation: continuation))
             if !isProcessing {
                 Task { await processQueue() }
             }
@@ -22,11 +23,10 @@ actor TranslationService {
     }
 
     private func processQueue() async {
-        guard !isProcessing else { return }
         isProcessing = true
-
-        while !pendingRequests.isEmpty {
-            let request = pendingRequests.removeFirst()
+        // キューが空になるまで
+        while !requestsQueue.isEmpty {
+            let request = requestsQueue.removeFirst()
             let result = await performTranslation(request.text)
             request.continuation.resume(returning: result)
         }

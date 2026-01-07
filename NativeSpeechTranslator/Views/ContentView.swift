@@ -4,13 +4,13 @@ import UniformTypeIdentifiers
 
 struct TranscriptDocument: FileDocument {
     static var readableContentTypes: [UTType] { [.plainText] }
-    
+
     var content: String
-    
+
     init(content: String) {
         self.content = content
     }
-    
+
     init(configuration: ReadConfiguration) throws {
         if let data = configuration.file.regularFileContents {
             content = String(data: data, encoding: .utf8) ?? ""
@@ -18,7 +18,7 @@ struct TranscriptDocument: FileDocument {
             content = ""
         }
     }
-    
+
     func fileWrapper(configuration: WriteConfiguration) throws -> FileWrapper {
         FileWrapper(regularFileWithContents: content.data(using: .utf8) ?? Data())
     }
