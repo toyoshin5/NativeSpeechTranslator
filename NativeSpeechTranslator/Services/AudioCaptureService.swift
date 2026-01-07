@@ -28,17 +28,33 @@ actor AudioCaptureService {
     ///
     /// - Returns: `AVAudioPCMBuffer` と `AVAudioTime` の非同期ストリーム。
     /// - Throws: 音声エンジンの開始に失敗した場合にエラーをスローします。
+    /// 音声入力を開始し、バッファの非同期ストリームを返します。
+    ///
+    /// - Returns: `AVAudioPCMBuffer` と `AVAudioTime` の非同期ストリーム。
+    /// - Throws: 音声エンジンの開始に失敗した場合にエラーをスローします。
     func startStream() throws -> AsyncStream<(AVAudioPCMBuffer, AVAudioTime)> {
         let inputNode = engine.inputNode
         let bus = 0
-        let format = inputNode.inputFormat(forBus: bus)
+        let inputFormat = inputNode.inputFormat(forBus: bus)
+        guard let outputFormat = AVAudioFormat(commonFormat: .pcmFormatInt16,
+                                               sampleRate: inputFormat.sampleRate,
+                                               channels: inputFormat.channelCount,
+                                               interleaved: false) else {
+            throw NSError(domain: "AudioCaptureService", code: -1, userInfo: [NSLocalizedDescriptionKey: "Failed to create output audio format"])
+        }
+        
+        guard let converter = AVAudioConverter(from: inputFormat, to: outputFormat) else {
+             throw NSError(domain: "AudioCaptureService", code: -1, userInfo: [NSLocalizedDescriptionKey: "Failed to create audio converter"])
+        }
         
         return AsyncStream { continuation in
             self.streamContinuation = continuation
             
-            inputNode.installTap(onBus: bus, bufferSize: 1024, format: format) { buffer, time in
-                if self.isStreaming {
-                    continuation.yield((buffer, time))
+            inputNode.installTap(onBus: bus, bufferSize: 1024, format: inputFormat) { buffer, time in
+                guard self.isStreaming else { return }
+                
+                if let outputBuffer = self.convert(buffer: buffer, using: converter, outputFormat: outputFormat) {
+                    continuation.yield((outputBuffer, time))
                 }
             }
             
@@ -49,6 +65,26 @@ actor AudioCaptureService {
                 continuation.finish()
                 self.isStreaming = false
             }
+        }
+    }
+    
+    /// 音声バッファを指定されたフォーマット（Int16 PCM）に変換します。
+    private func convert(buffer: AVAudioPCMBuffer, using converter: AVAudioConverter, outputFormat: AVAudioFormat) -> AVAudioPCMBuffer? {
+        guard let outputBuffer = AVAudioPCMBuffer(pcmFormat: outputFormat, frameCapacity: buffer.frameLength) else { return nil }
+        
+        let inputBlock: AVAudioConverterInputBlock = { _, outStatus in
+            outStatus.pointee = .haveData
+            return buffer
+        }
+        
+        var error: NSError?
+        let status = converter.convert(to: outputBuffer, error: &error, withInputFrom: inputBlock)
+        
+        if status != .error, error == nil {
+            return outputBuffer
+        } else {
+            print("Audio conversion error: \(String(describing: error))")
+            return nil
         }
     }
     
