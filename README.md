@@ -8,7 +8,8 @@ macOS Tahoe以降で動作するオフラインのリアルタイム音声認識
 ## 概要
 
 マイク音声をリアルタイムでキャプチャし、オンデバイスで以下の処理を行います
-LadioCast，BlackHole等を活用することで、zoom通話などから音声をキャプチャすることができます
+
+LadioCast，BlackHole等を活用することで、zoom通話などから音声をキャプチャすることもできます
 
 1. `SpeechAnalyzer` による文字起こし
 2. `FoundationModels` による日本語翻訳
