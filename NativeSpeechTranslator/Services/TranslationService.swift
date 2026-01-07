@@ -7,25 +7,34 @@ actor TranslationService {
     static let shared = TranslationService()
 
     private var session: LanguageModelSession?
-
-    private var isTranslating = false
+    private var pendingRequests: [(text: String, continuation: CheckedContinuation<String, Never>)] = []
+    private var isProcessing = false
 
     private init() {}
 
-    /// テキストを日本語に翻訳します。
-    ///
-    /// - Parameter text: 翻訳対象の英語テキスト。
-    /// - Returns: 翻訳された日本語テキスト。
     func translate(_ text: String) async -> String {
+        await withCheckedContinuation { continuation in
+            pendingRequests.append((text: text, continuation: continuation))
+            if !isProcessing {
+                Task { await processQueue() }
+            }
+        }
+    }
 
-        // 排他ロック
-        guard !isTranslating else {
-            return "..."
+    private func processQueue() async {
+        guard !isProcessing else { return }
+        isProcessing = true
+
+        while !pendingRequests.isEmpty {
+            let request = pendingRequests.removeFirst()
+            let result = await performTranslation(request.text)
+            request.continuation.resume(returning: result)
         }
 
-        isTranslating = true
-        defer { isTranslating = false }
+        isProcessing = false
+    }
 
+    private func performTranslation(_ text: String) async -> String {
         if session == nil {
             session = LanguageModelSession()
         }
@@ -41,7 +50,6 @@ actor TranslationService {
             return response.content
         } catch {
             print("Translation error: \(error)")
-            // エラーが発生した場合、セッションをリセットして次回の復帰を試みる
             self.session = nil
             return "翻訳エラー"
         }
