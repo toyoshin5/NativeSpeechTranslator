@@ -16,6 +16,7 @@ struct TranscriptRow: View {
         HStack(alignment: .top, spacing: 16) {
             // 原文（左側）
             Text(original)
+                .textSelection(.enabled)
                 .font(.body)
                 .foregroundColor(.primary)
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -26,6 +27,7 @@ struct TranscriptRow: View {
             VStack(alignment: .leading) {
                 if let translation = translation {
                     Text(translation)
+                        .textSelection(.enabled)
                         .font(.body)
                         .foregroundColor(.secondary)
                 } else if isTranslating {
