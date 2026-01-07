@@ -2,14 +2,12 @@ import AVFoundation
 import Foundation
 import Speech
 
-/// 音声認識結果を表す構造体。
 struct TranscriptionResult: Identifiable, Equatable {
     let id = UUID()
     let text: String
     let isFinal: Bool
 }
 
-/// `SpeechAnalyzer` を使用して音声をテキストに変換するアクター。
 @available(macOS 26, *)
 actor SpeechRecognitionService {
 
@@ -128,15 +126,14 @@ actor SpeechRecognitionService {
         }
     }
 
-    /// 認識を停止します。
     func stopRecognition() {
         analysisTask?.cancel()
         analysisTask = nil
     }
 
     ///
-    /// SpeechAnalyzerが要求するフォーマットに、入力された音声バッファを変換します。
-    /// 例えば、マイク入力が48kHz/Stereoで、Analyzerが16kHz/Monoを要求する場合に使用されます。
+    /// SpeechAnalyzerが要求するフォーマットに、入力された音声バッファを変換
+    /// 例えば、マイク入力が48kHz/Stereoで、Analyzerが16kHz/Monoを要求する場合に使用
     ///
     /// - Parameters:
     ///   - buffer: 変換元の音声バッファ。

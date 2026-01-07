@@ -1,13 +1,9 @@
 import AVFoundation
 import SwiftUI
 
-/// アプリケーションのメイン画面。
-///
-/// 音声入力デバイスの選択、認識結果の表示、録音コントロールを提供します。
 @available(macOS 26, *)
 struct ContentView: View {
 
-    /// ViewModel
     @StateObject private var viewModel = AppViewModel()
 
     var body: some View {
@@ -78,7 +74,7 @@ struct ContentView: View {
                 Spacer()
 
                 Button("ログを保存") {
-                    // ログ保存機能（未実装）
+                    // TODO: ログ保存機能（未実装）
                 }
             }
             .padding()

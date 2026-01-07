@@ -1,18 +1,12 @@
 import AVFoundation
 import Foundation
 
-/// 音声入力を管理し、`AVAudioPCMBuffer` のストリームを提供するアクター。
-///
-/// システムのマイクやその他の入力デバイスからの音声キャプチャを処理します。
 actor AudioCaptureService {
 
-    /// 音声エンジン
     private let engine = AVAudioEngine()
 
-    /// 現在選択されている入力デバイス
     private(set) var currentInputDevice: AVCaptureDevice?
 
-    /// ストリーミング中かどうか
     private(set) var isStreaming: Bool = false
 
     private var streamContinuation: AsyncStream<(AVAudioPCMBuffer, AVAudioTime)>.Continuation?
@@ -54,7 +48,6 @@ actor AudioCaptureService {
         }
     }
 
-    /// 音声入力を停止します。
     func stopStream() {
         engine.stop()
         engine.inputNode.removeTap(onBus: 0)
@@ -81,7 +74,6 @@ actor AudioCaptureService {
         }
     }
 
-    /// RMS（二乗平均平方根）を計算し、レベルストリームに送信します。
     private func processAudioLevel(buffer: AVAudioPCMBuffer) {
         let channelData = buffer.floatChannelData
         let channelCount = Int(buffer.format.channelCount)
@@ -113,9 +105,6 @@ actor AudioCaptureService {
         levelContinuation?.yield(amplifiedLevel)
     }
 
-    /// 利用可能な音声入力デバイスのリストを取得します。
-    ///
-    /// - Returns: 利用可能な `AVCaptureDevice` の配列。
     nonisolated func getAvailableDevices() -> [AVCaptureDevice] {
         AVCaptureDevice.DiscoverySession(
             deviceTypes: [.builtInMicrophone, .externalUnknown],

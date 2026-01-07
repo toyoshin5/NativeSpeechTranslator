@@ -1,6 +1,5 @@
 import SwiftUI
 
-/// 1行分のトランスクリプト（原文と翻訳）を表示するビュー。
 struct TranscriptRow: View {
 
     /// 原文
@@ -9,7 +8,6 @@ struct TranscriptRow: View {
     /// 翻訳文
     let translation: String?
 
-    /// 翻訳中かどうか
     let isTranslating: Bool
 
     var body: some View {
