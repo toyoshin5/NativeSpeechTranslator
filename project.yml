@@ -1,0 +1,19 @@
+name: NativeSpeechTranslator
+options:
+  bundleIdPrefix: com.example
+targets:
+  NativeSpeechTranslator:
+    type: application
+    platform: macOS
+    deploymentTarget: "26.0"
+    sources: 
+      - NativeSpeechTranslator
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.example.NativeSpeechTranslator
+        INFOPLIST_KEY_NSSpeechRecognitionUsageDescription: "音声を文字に変換するために使用します。"
+        INFOPLIST_KEY_NSMicrophoneUsageDescription: "システム音声をキャプチャするためにマイク入力を使用します。"
+        ENABLE_USER_SCRIPT_SANDBOXING: NO
+        GENERATE_INFOPLIST_FILE: YES
+    entitlements:
+        path: NativeSpeechTranslator/NativeSpeechTranslator.entitlements
