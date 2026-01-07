@@ -127,6 +127,10 @@ class AppViewModel: ObservableObject {
         }
     }
 
+    func clearTranscripts() {
+        transcripts.removeAll()
+    }
+
     private func restartRecording() {
         Task {
             await audioService.stopStream()
