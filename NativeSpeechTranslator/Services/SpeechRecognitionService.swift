@@ -16,6 +16,8 @@ actor SpeechRecognitionService {
     static let shared = SpeechRecognitionService()
     
     private var analysisTask: Task<Void, Never>?
+    private var audioConverter: AVAudioConverter?
+    private var bestAvailableAudioFormat: AVAudioFormat?
     
     private init() {}
     
@@ -32,58 +34,77 @@ actor SpeechRecognitionService {
                         continuation.finish()
                         return
                     }
-                    let transcriber = SpeechTranscriber(locale: locale, preset: .progressiveTranscription)
+                    
+                    try await AssetInventory.reserve(locale: locale)
 
-                    if let installationRequest = try await AssetInventory.assetInstallationRequest(supporting: [transcriber]) {
-                        try await installationRequest.downloadAndInstall()
+                    let preset: SpeechTranscriber.Preset = .progressiveTranscription
+                    
+                    let transcriber = SpeechTranscriber(
+                        locale: locale,
+                        preset: preset
+                    )
+
+                    let analyzer = SpeechAnalyzer(modules: [transcriber], options: .init(priority: .userInitiated, modelRetention: .processLifetime))
+
+                    self.bestAvailableAudioFormat = await SpeechAnalyzer.bestAvailableAudioFormat(compatibleWith: [transcriber])
+                    
+                    try await analyzer.prepareToAnalyze(in: self.bestAvailableAudioFormat, withProgressReadyHandler: nil)
+                    
+                    let installed = (await SpeechTranscriber.installedLocales).contains(locale)
+                    if !installed {
+                        if let installationRequest = try await AssetInventory.assetInstallationRequest(supporting: [transcriber]) {
+                            try await installationRequest.downloadAndInstall()
+                        }
                     }
                     
                     let (inputSequence, inputBuilder) = AsyncStream.makeStream(of: AnalyzerInput.self)
                     
-                    // Step 4: Analyzer
-                    // ベストなオーディオフォーマットを取得（今回は簡易的にAVAudioEngineのフォーマットを信頼するが、本来は変換が必要）
-                    // let audioFormat = await SpeechAnalyzer.bestAvailableAudioFormat(compatibleWith: [transcriber])
-                    // 実際の実装では、入力オーディオを入力前にこのフォーマットにコンバートするのが理想
+                    Task {
+                        do {
+                            try await analyzer.start(inputSequence: inputSequence)
+                        } catch {
+                            print("Analyzer start error: \(error)")
+                            continuation.finish()
+                        }
+                    }
                     
-                    let analyzer = SpeechAnalyzer(modules: [transcriber])
-                    
-                    // Step 5: Supply audio
-                    // 引数の audioStream を inputSequence に流し込むタスク
                     Task {
                         for await (buffer, _) in audioStream {
-                             // サンプルコード: let input = AnalyzerInput(buffer: pcmBuffer)
-                            let input = AnalyzerInput(buffer: buffer)
-                            inputBuilder.yield(input)
+                            if let format = self.bestAvailableAudioFormat {
+                                if let converted = self.convertBuffer(buffer, to: format) {
+                                    let input = AnalyzerInput(buffer: converted)
+                                    inputBuilder.yield(input)
+                                }
+                            } else {
+                                let input = AnalyzerInput(buffer: buffer)
+                                inputBuilder.yield(input)
+                            }
                         }
                         inputBuilder.finish()
                     }
                     
-                    // Step 7: Act on results (Transcription)
-                    // 結果受信タスク
-                    Task {
-                         do {
-                             for try await result in transcriber.results {
-                                 let bestTranscription = result.text // AttributedString
-                                 // AttributedStringからStringへの変換: String(bestTranscription.characters)
-                                 let plainText = String(bestTranscription.characters)
-                                 let isFinal = result.isFinal
-                                 
-                                 let res = TranscriptionResult(text: plainText, isFinal: isFinal)
-                                 continuation.yield(res)
-                             }
-                         } catch {
-                             print("Transcription processing error: \(error)")
-                         }
-                         continuation.finish()
-                     }
+                    do {
+                        for try await result in transcriber.results {
+                            let bestTranscription = result.text
+                            let plainText = String(bestTranscription.characters)
+                            let isFinal = result.isFinal
+                            
+                            let res = TranscriptionResult(text: plainText, isFinal: isFinal)
+                            print("SpeechRecognition: Result text='\(plainText)' isFinal=\(isFinal)")
+                            continuation.yield(res)
+                        }
+                    } catch {
+                       if error is CancellationError {
+                           print("Task cancelled")
+                       } else {
+                           print("Transcription processing error: \(error)")
+                       }
+                    }
                     
-                    // Step 6: Perform analysis
-                    // 分析の実行（ここでブロックする可能性があるため、Analysis自体はawaitする）
-                    // サンプルコード: let lastSampleTime = try await analyzer.analyzeSequence(inputSequence)
-                    // ストリームが終了するまで待機
-                    _ = try await analyzer.analyzeSequence(inputSequence)
-                    
-                    // Step 8: Finish analysis (今回はストリーム終了で自動的に終わるか、cancelで終わる)
+                    continuation.finish()
+
+                    try await analyzer.finalize(through: nil)
+                    await AssetInventory.release(reservedLocale: locale)
                     
                 } catch {
                     print("Speech recognition setup error: \(error)")
@@ -97,5 +118,58 @@ actor SpeechRecognitionService {
     func stopRecognition() {
         analysisTask?.cancel()
         analysisTask = nil
+    }
+
+    ///
+    /// SpeechAnalyzerが要求するフォーマットに、入力された音声バッファを変換します。
+    /// 例えば、マイク入力が48kHz/Stereoで、Analyzerが16kHz/Monoを要求する場合に使用されます。
+    ///
+    /// - Parameters:
+    ///   - buffer: 変換元の音声バッファ。
+    ///   - format: 変換先のターゲットフォーマット。
+    /// - Returns: 変換された音声バッファ。変換に失敗した場合は `nil`。
+    private func convertBuffer(_ buffer: AVAudioPCMBuffer, to format: AVAudioFormat) -> AVAudioPCMBuffer? {
+        let inputFormat = buffer.format
+        
+        guard inputFormat != format else {
+            return buffer
+        }
+
+        if audioConverter == nil || audioConverter?.outputFormat != format {
+            audioConverter = AVAudioConverter(from: inputFormat, to: format)
+            audioConverter?.primeMethod = .none 
+        }
+        
+        guard let converter = audioConverter else {
+            print("Failed to create Audio Converter")
+            return nil
+        }
+        
+        let sampleRateRatio = converter.outputFormat.sampleRate / converter.inputFormat.sampleRate
+        let scaledInputFrameLength = Double(buffer.frameLength) * sampleRateRatio
+        let frameCapacity = AVAudioFrameCount(scaledInputFrameLength.rounded(.up))
+        
+        guard let conversionBuffer = AVAudioPCMBuffer(pcmFormat: converter.outputFormat, frameCapacity: frameCapacity) else {
+            print("Failed to create AVAudioPCMBuffer")
+            return nil
+        }
+        
+        var error: NSError?
+        var bufferProcessed = false
+        
+        let inputBlock: AVAudioConverterInputBlock = { _, inputStatusPointer in
+            defer { bufferProcessed = true }
+             inputStatusPointer.pointee = bufferProcessed ? .noDataNow : .haveData
+             return bufferProcessed ? nil : buffer
+        }
+        
+        let status = converter.convert(to: conversionBuffer, error: &error, withInputFrom: inputBlock)
+        
+        if status == .error {
+             print("Conversion failed: \(String(describing: error))")
+             return nil
+        }
+        
+        return conversionBuffer
     }
 }
