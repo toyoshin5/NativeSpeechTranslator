@@ -30,7 +30,7 @@ struct TranscriptRow: View {
                         .foregroundColor(.secondary)
                 } else if isTranslating {
                     ProgressView()
-                        .scaleEffect(0.8)
+                        .scaleEffect(0.5)
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)

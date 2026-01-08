@@ -10,7 +10,7 @@ class AppViewModel: ObservableObject {
         let id = UUID()
         var original: String
         var translation: String?
-        var isTranslating: Bool = false
+        var isShowLoading: Bool = false
         var isFinal: Bool = false
     }
 
@@ -167,34 +167,32 @@ class AppViewModel: ObservableObject {
     }
 
     private func handleRecognitionResult(_ result: TranscriptionResult) {
-        if result.isFinal {
-            if let lastIndex = transcripts.indices.last, !transcripts[lastIndex].isFinal {
-                transcripts[lastIndex].original = result.text
+        let isAppleTranslation = UserDefaults.standard.string(forKey: "translationProvider") == "translation"
+        let shouldTranslate = result.isFinal || isAppleTranslation
+        
+        var targetIndex: Int?
+        
+        if let lastIndex = transcripts.indices.last, !transcripts[lastIndex].isFinal {
+            targetIndex = lastIndex
+            transcripts[lastIndex].original = result.text
+            
+            if result.isFinal {
                 transcripts[lastIndex].isFinal = true
-                transcripts[lastIndex].isTranslating = true
-                translate(text: result.text, at: lastIndex)
-            } else {
-                let item = TranscriptItem(
-                    original: result.text,
-                    translation: nil,
-                    isTranslating: true,
-                    isFinal: true
-                )
-                transcripts.append(item)
-                translate(text: result.text, at: transcripts.count - 1)
+                transcripts[lastIndex].isShowLoading = true
             }
         } else {
-            if let lastIndex = transcripts.indices.last, !transcripts[lastIndex].isFinal {
-                transcripts[lastIndex].original = result.text
-            } else {
-                let item = TranscriptItem(
-                    original: result.text,
-                    translation: nil,
-                    isTranslating: false,
-                    isFinal: false
-                )
-                transcripts.append(item)
-            }
+            let newItem = TranscriptItem(
+                original: result.text,
+                translation: nil,
+                isShowLoading: shouldTranslate,
+                isFinal: result.isFinal
+            )
+            transcripts.append(newItem)
+            targetIndex = transcripts.indices.last
+        }
+
+        if shouldTranslate, let index = targetIndex {
+            translate(text: result.text, at: index)
         }
     }
 
@@ -204,7 +202,7 @@ class AppViewModel: ObservableObject {
 
             if index < transcripts.count {
                 transcripts[index].translation = translation
-                transcripts[index].isTranslating = false
+                transcripts[index].isShowLoading = false
             }
         }
     }

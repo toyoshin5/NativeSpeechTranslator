@@ -23,9 +23,12 @@ class TranslationService: ObservableObject {
     }
     
     func translate(_ text: String) async throws -> String {
-        // Ensure configuration is set to start the session if not already
+        let source = Locale.Language(identifier: "en")
+        let target = Locale.Language(identifier: "ja")
+
+
         if configuration == nil {
-            configuration = TranslationSession.Configuration(target: Locale.Language(identifier: "ja"))
+            configuration = TranslationSession.Configuration(source: source, target: target)
         }
         
         return try await withCheckedThrowingContinuation { continuation in

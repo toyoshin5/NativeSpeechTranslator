@@ -15,9 +15,9 @@ extension DependencyValues {
 extension TranslationClient: DependencyKey {
     static let liveValue = TranslationClient(
         translate: { text in
-            let provider = UserDefaults.standard.string(forKey: "translationProvider") ?? "LLM"
+            let provider = UserDefaults.standard.string(forKey: "translationProvider") ?? "foundation"
             
-            if provider == "Apple" {
+            if provider == "translation" {
                 do {
                     return try await TranslationService.shared.translate(text)
                 } catch {

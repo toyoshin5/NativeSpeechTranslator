@@ -2,25 +2,23 @@ import SwiftUI
 import Translation
 
 struct SettingsView: View {
-    @AppStorage("translationProvider") private var translationProvider: String = "LLM"
+    @AppStorage("translationProvider") private var translationProvider: String = "foundation"
     
     var body: some View {
         Form {
             Section("Translation Service") {
                 Picker("Provider", selection: $translationProvider) {
-                    Text("LLM").tag("LLM")
-                    if #available(macOS 15.0, *) {
-                        Text("Apple Translation").tag("Apple")
-                    }
+                    Text("Foundation Models").tag("foundation")
+                    Text("Translation").tag("translation")
                 }
                 .pickerStyle(.segmented)
                 
-                Text(translationProvider == "LLM" ? "Uses local LLM model." : "Uses Apple's system translation.")
+                Text(translationProvider == "foundation" ? "Uses local LLM model." : "Uses Apple's system translation.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
             
-            if #available(macOS 15.0, *), translationProvider == "Apple" {
+            if translationProvider == "translation" {
                 AppleTranslationSettingsView()
             }
         }

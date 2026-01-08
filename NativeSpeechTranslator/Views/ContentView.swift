@@ -64,7 +64,7 @@ struct ContentView: View {
                 TranscriptRow(
                     original: item.original,
                     translation: item.translation,
-                    isTranslating: item.isTranslating
+                    isTranslating: item.isShowLoading
                 )
                 .padding(.horizontal)
                 Divider()
