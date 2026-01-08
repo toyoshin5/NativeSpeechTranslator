@@ -210,12 +210,15 @@ class AppViewModel: ObservableObject {
                 transcripts[index].isShowLoading = false
 
                 if isFinal {
-                    let polished = await TranslationPolishingService.shared.polish(
-                        originalText: text,
-                        translatedText: translation
-                    )
-                    if index < transcripts.count {
-                        transcripts[index].translation = polished
+                    let polishingEnabled = UserDefaults.standard.bool(forKey: "polishingEnabled")
+                    if polishingEnabled {
+                        let polished = await TranslationPolishingService.shared.polish(
+                            originalText: text,
+                            translatedText: translation
+                        )
+                        if index < transcripts.count {
+                            transcripts[index].translation = polished
+                        }
                     }
                 }
             }

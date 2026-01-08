@@ -1,8 +1,14 @@
 import SwiftUI
 import Translation
+import FoundationModels
 
 struct SettingsView: View {
     @AppStorage("translationProvider") private var translationProvider: String = "foundation"
+    @AppStorage("polishingEnabled") private var polishingEnabled: Bool = true
+
+    private var isFoundationModelsAvailable: Bool {
+        SystemLanguageModel.default.isAvailable
+    }
 
     var body: some View {
         Form {
@@ -21,14 +27,37 @@ struct SettingsView: View {
                 .foregroundStyle(.secondary)
             }
 
+            Section("Translation Polishing") {
+                Toggle(
+                    "Apple Intelligenceを用いた翻訳補正を有効化する",
+                    isOn: Binding(
+                        get: { isFoundationModelsAvailable && polishingEnabled },
+                        set: { polishingEnabled = $0 }
+                    )
+                )
+                .disabled(!isFoundationModelsAvailable)
+
+                if !isFoundationModelsAvailable {
+                    Text("このデバイスではApple Intelligenceが利用できません")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+            }
+
             if translationProvider == "translation" {
                 AppleTranslationSettingsView()
             }
         }
         .padding()
-        .frame(width: 400, height: 250)
+        .frame(width: 400, height: 300)
+        .onAppear {
+            if !isFoundationModelsAvailable {
+                polishingEnabled = false
+            }
+        }
     }
 }
+
 
 struct AppleTranslationSettingsView: View {
     @State private var downloadConfiguration: TranslationSession.Configuration?

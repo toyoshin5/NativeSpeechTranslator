@@ -100,8 +100,6 @@ actor SpeechRecognitionService {
                             let isFinal = result.isFinal
 
                             let res = TranscriptionResult(text: plainText, isFinal: isFinal)
-                            print(
-                                "SpeechRecognition: Result text='\(plainText)' isFinal=\(isFinal)")
                             continuation.yield(res)
                         }
                     } catch {

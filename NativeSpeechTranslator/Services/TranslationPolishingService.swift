@@ -47,8 +47,6 @@ actor TranslationPolishingService {
             session = LanguageModelSession()
         }
 
-        print("translatedText: \(translatedText)")
-
         guard let session = session else { return translatedText }
 
         let prompt = """
@@ -59,7 +57,6 @@ actor TranslationPolishingService {
 
         do {
             let response = try await session.respond(to: prompt)
-            print("responseText: \(response.content)")
             return response.content
         } catch {
             print("Polishing error: \(error)")
