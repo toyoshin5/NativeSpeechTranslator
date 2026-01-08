@@ -1,0 +1,21 @@
+## 仕様変更
+
+- TranslationService適切で効率的なコードでstructベースのDIができるようにしてください
+- ついでにswift-dependenciesを導入してください
+
+Translationフレームワークでアプリ内翻訳するバージョンも試してみたいです
+まずは以下の記事を読んでTranslationフレームワークを理解してください
+
+https://qiita.com/mashunzhe/items/d90ae92e7daba800abaf
+
+その後，structベースのDIに準拠した形で，Translationフレームワーク版のTanslationSerViceを作成してください．
+現在のTanslationSerViceをTanslationSerViceLLMと名付けましょう．
+UIなどは今と全く同じようにしてできるだけ変更しないでください．
+
+- アプリの設定画面を作成してください．
+- 設定画面はmacのバーのアプリ名の中からアクセスできるようにしてください．
+
+もし永続化が必要な場合はAppStorageを検討してください
+
+使用するTranslationServiceを切り替えられるようにしてください(Segmentation Controlを想定)
+翻訳モデルのDLもここで行う想定

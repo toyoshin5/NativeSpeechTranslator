@@ -1,6 +1,7 @@
 import AVFoundation
 import Combine
 import Foundation
+import Dependencies
 
 @MainActor
 @available(macOS 26, *)
@@ -31,7 +32,7 @@ class AppViewModel: ObservableObject {
 
     private let audioService = AudioCaptureService.shared
     private let recognitionService = SpeechRecognitionService.shared
-    private let translationService = TranslationService.shared
+    @Dependency(\.translationClient) var translationClient
 
     private var levelMonitoringTask: Task<Void, Never>?
 
@@ -200,7 +201,7 @@ class AppViewModel: ObservableObject {
 
     private func translate(text: String, at index: Int) {
         Task {
-            let translation = await translationService.translate(text)
+            let translation = await translationClient.translate(text)
 
             if index < transcripts.count {
                 transcripts[index].translation = translation
