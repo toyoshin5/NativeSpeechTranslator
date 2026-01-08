@@ -131,6 +131,7 @@ class AppViewModel: ObservableObject {
         transcripts.removeAll()
         Task {
             await translationClient.reset()
+            await TranslationPolishingService.shared.reset()
         }
     }
 
@@ -196,17 +197,27 @@ class AppViewModel: ObservableObject {
         }
 
         if shouldTranslate, let index = targetIndex {
-            translate(text: result.text, at: index)
+            translate(text: result.text, at: index, isFinal: result.isFinal)
         }
     }
 
-    private func translate(text: String, at index: Int) {
+    private func translate(text: String, at index: Int, isFinal: Bool) {
         Task {
             let translation = await translationClient.translate(text)
 
             if index < transcripts.count {
                 transcripts[index].translation = translation
                 transcripts[index].isShowLoading = false
+
+                if isFinal {
+                    let polished = await TranslationPolishingService.shared.polish(
+                        originalText: text,
+                        translatedText: translation
+                    )
+                    if index < transcripts.count {
+                        transcripts[index].translation = polished
+                    }
+                }
             }
         }
     }

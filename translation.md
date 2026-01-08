@@ -1,21 +1,21 @@
 ## 仕様変更
 
-- TranslationService適切で効率的なコードでstructベースのDIができるようにしてください
-- ついでにswift-dependenciesを導入してください
+TranslationServiceで翻訳した結果を，更にAppleのFoundation Modelsで校正するような設計にしてほしいです。
+英文を校正するためのService actorを新たに作成して，訳文を校正させてください．
 
-Translationフレームワークでアプリ内翻訳するバージョンも試してみたいです
-まずは以下の記事を読んでTranslationフレームワークを理解してください
+作成のタイミングはisFinal=trueによるそのTranscriptItemで最後の翻訳を行ったタイミングでお願いします．
 
-https://qiita.com/mashunzhe/items/d90ae92e7daba800abaf
+校正するactorへ与えるのは，翻訳前の文:stringと翻訳後の文:stringでお願いします．
 
-その後，structベースのDIに準拠した形で，Translationフレームワーク版のTanslationSerViceを作成してください．
-現在のTanslationSerViceをTanslationSerViceLLMと名付けましょう．
-UIなどは今と全く同じようにしてできるだけ変更しないでください．
+プロンプトの内容は，
+翻訳前の文を翻訳後の文にしましたが，過去の文脈なども考慮して流暢な言葉になるようにしてほしい．みたいな内容(英語)でお願いします．
 
-- アプリの設定画面を作成してください．
-- 設定画面はmacのバーのアプリ名の中からアクセスできるようにしてください．
+翻訳の校正中は，Loadingなどの表示はせずに，TranslationServiceで翻訳した結果を表示しておいてください．
 
-もし永続化が必要な場合はAppStorageを検討してください
+翻訳の校正もTranslationServiceLLMを同様にキューを使用し，1つずつ実行してください．
 
-使用するTranslationServiceを切り替えられるようにしてください(Segmentation Controlを想定)
-翻訳モデルのDLもここで行う想定
+翻訳の校正結果は，TranslationServiceで翻訳した結果を新規クラスで校正したものに置き換えてください．
+
+Foundation Modelsの使い方はTranslationServiceLLMの実装を参考にしてください．
+
+
