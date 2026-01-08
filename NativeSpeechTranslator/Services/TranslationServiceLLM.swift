@@ -20,6 +20,16 @@ actor TranslationServiceLLM {
             }
         }
     }
+    
+    func reset() {
+        for request in requestsQueue {
+            request.continuation.resume(returning: "Translation Cancelled")
+        }
+        
+        requestsQueue.removeAll()
+        session = nil
+        isProcessing = false
+    }
 
     private func processQueue() async {
         isProcessing = true

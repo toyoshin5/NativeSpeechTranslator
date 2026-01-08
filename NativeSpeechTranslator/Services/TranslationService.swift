@@ -36,6 +36,19 @@ class TranslationService: ObservableObject {
         }
     }
 
+    func reset() {
+
+        requestContinuation?.finish()
+        requestContinuation = nil
+        requestStream = nil
+
+        configuration = nil
+
+        let (stream, continuation) = AsyncStream<Request>.makeStream()
+        self.requestStream = stream
+        self.requestContinuation = continuation
+    }
+
     func handleSession(_ session: TranslationSession) async {
         guard let stream = requestStream else { return }
 

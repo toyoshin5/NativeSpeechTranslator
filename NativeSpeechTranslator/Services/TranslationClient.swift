@@ -3,6 +3,7 @@ import Foundation
 
 struct TranslationClient {
     var translate: @Sendable (String) async -> String
+    var reset: @Sendable () async -> Void
 }
 
 extension DependencyValues {
@@ -26,14 +27,20 @@ extension TranslationClient: DependencyKey {
                 }
             }
             return await TranslationServiceLLM.shared.translate(text)
+        },
+        reset: {
+            await TranslationService.shared.reset()
+            await TranslationServiceLLM.shared.reset()
         }
     )
 
     static let testValue = TranslationClient(
-        translate: { _ in "Test Translation" }
+        translate: { _ in "Test Translation" },
+        reset: {}
     )
 
     static let previewValue = TranslationClient(
-        translate: { _ in "Preview Translation" }
+        translate: { _ in "Preview Translation" },
+        reset: {}
     )
 }

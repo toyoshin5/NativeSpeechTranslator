@@ -129,6 +129,9 @@ class AppViewModel: ObservableObject {
 
     func clearTranscripts() {
         transcripts.removeAll()
+        Task {
+            await translationClient.reset()
+        }
     }
 
     private func restartRecording() {
