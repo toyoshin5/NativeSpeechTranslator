@@ -29,7 +29,6 @@ struct SettingsView: View {
     }
 }
 
-@available(macOS 15.0, *)
 struct AppleTranslationSettingsView: View {
     @State private var downloadConfiguration: TranslationSession.Configuration?
     @State private var status: LanguageAvailability.Status?

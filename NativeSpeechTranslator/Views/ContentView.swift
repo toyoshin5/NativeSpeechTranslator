@@ -24,7 +24,6 @@ struct TranscriptDocument: FileDocument {
     }
 }
 
-@available(macOS 26, *)
 struct ContentView: View {
 
     @StateObject private var viewModel = AppViewModel()

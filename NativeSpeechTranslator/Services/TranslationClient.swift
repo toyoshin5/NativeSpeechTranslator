@@ -18,7 +18,11 @@ extension TranslationClient: DependencyKey {
             let provider = UserDefaults.standard.string(forKey: "translationProvider") ?? "LLM"
             
             if provider == "Apple" {
-                return await TranslationService.shared.translate(text)
+                do {
+                    return try await TranslationService.shared.translate(text)
+                } catch {
+                     return "Translation Error: \(error.localizedDescription)"
+                }
             } 
             return await TranslationServiceLLM.shared.translate(text)
         }

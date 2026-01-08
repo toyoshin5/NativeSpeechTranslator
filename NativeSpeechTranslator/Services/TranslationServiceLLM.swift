@@ -1,7 +1,6 @@
 import Foundation
 import FoundationModels
 
-@available(macOS 26, *)
 actor TranslationServiceLLM {
 
     static let shared = TranslationServiceLLM()

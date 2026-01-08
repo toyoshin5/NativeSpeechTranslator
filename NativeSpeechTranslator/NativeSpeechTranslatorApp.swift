@@ -7,9 +7,7 @@ struct NativeSpeechTranslatorApp: App {
         WindowGroup {
             ContentView()
                 .background {
-                    if #available(macOS 15.0, *) {
-                        TranslationHostView()
-                    }
+                    TranslationHostView()
                 }
         }
         

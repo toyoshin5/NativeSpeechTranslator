@@ -8,7 +8,6 @@ struct TranscriptionResult: Identifiable, Equatable {
     let isFinal: Bool
 }
 
-@available(macOS 26, *)
 actor SpeechRecognitionService {
 
     static let shared = SpeechRecognitionService()

@@ -4,7 +4,6 @@ import Foundation
 import Dependencies
 
 @MainActor
-@available(macOS 26, *)
 class AppViewModel: ObservableObject {
 
     struct TranscriptItem: Identifiable {
