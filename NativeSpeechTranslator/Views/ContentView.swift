@@ -29,6 +29,7 @@ struct ContentView: View {
     @StateObject private var viewModel = AppViewModel()
     @State private var isExporting = false
     @State private var exportDocument: TranscriptDocument?
+    @AppStorage("fontSize") private var fontSize: Double = 16.0
 
     var body: some View {
         VStack(spacing: 0) {
@@ -44,6 +45,16 @@ struct ContentView: View {
                 AudioVisualizerView(level: viewModel.audioLevel)
                     .frame(width: 80, height: 20)
                     .padding(.leading, 8)
+                
+                HStack(spacing: 8) {
+                    Image(systemName: "textformat.size.smaller")
+                        .foregroundStyle(.secondary)
+                    Slider(value: $fontSize, in: 10...40)
+                        .frame(width: 100)
+                    Image(systemName: "textformat.size.larger")
+                        .foregroundStyle(.secondary)
+                }
+                .padding(.leading, 16)
 
                 Spacer()
 
@@ -64,7 +75,8 @@ struct ContentView: View {
                 TranscriptRow(
                     original: item.original,
                     translation: item.translation,
-                    isTranslating: item.isShowLoading
+                    isTranslating: item.isShowLoading,
+                    fontSize: fontSize
                 )
                 .padding(.horizontal)
                 Divider()

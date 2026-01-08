@@ -9,13 +9,15 @@ struct TranscriptRow: View {
     let translation: String?
 
     let isTranslating: Bool
+    
+    let fontSize: CGFloat
 
     var body: some View {
         HStack(alignment: .top, spacing: 16) {
             // 原文（左側）
             Text(original)
                 .textSelection(.enabled)
-                .font(.body)
+                .font(.system(size: fontSize))
                 .foregroundColor(.primary)
                 .frame(maxWidth: .infinity, alignment: .leading)
 
@@ -26,7 +28,7 @@ struct TranscriptRow: View {
                 if let translation = translation {
                     Text(translation)
                         .textSelection(.enabled)
-                        .font(.body)
+                        .font(.system(size: fontSize))
                         .foregroundColor(.secondary)
                 } else if isTranslating {
                     ProgressView()
