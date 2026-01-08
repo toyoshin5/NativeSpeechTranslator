@@ -1,6 +1,12 @@
 import Foundation
 import FoundationModels
 
+@Generable
+struct PolishedTranslation {
+    @Guide(description: "The refined Japanese translation that is more fluent and natural")
+    var refinedTranslation: String
+}
+
 actor TranslationPolishingService {
 
     static let shared = TranslationPolishingService()
@@ -8,6 +14,14 @@ actor TranslationPolishingService {
     private var session: LanguageModelSession?
     private var requestsQueue: [(originalText: String, translatedText: String, continuation: CheckedContinuation<String, Never>)] = []
     private var isProcessing = false
+
+    private let instructions = """
+        You are a professional Japanese translation editor.
+        Your task is to refine English-to-Japanese translations to make them more fluent and natural.
+        Consider the context of previous translations in the conversation.
+        Maintain the original meaning while improving readability and naturalness.
+        Output only the refined Japanese translation without any explanation or additional text.
+        """
 
     private init() {}
 
@@ -44,20 +58,24 @@ actor TranslationPolishingService {
 
     private func performPolishing(originalText: String, translatedText: String) async -> String {
         if session == nil {
-            session = LanguageModelSession()
+            session = LanguageModelSession(instructions: instructions)
         }
+        print("O:\(originalText)")
+        print("AT:\(translatedText)")
 
         guard let session = session else { return translatedText }
 
         let prompt = """
-            I translated "\(originalText)" into "\(translatedText)".
-            Please refine this translation to make it more fluent and natural, considering the previous context of our conversation.
-            Return only the refined translation, nothing else.
+            Original English: \(originalText)
+            Current Japanese translation: \(translatedText)
+            
+            Please refine the Japanese translation.
             """
 
         do {
-            let response = try await session.respond(to: prompt)
-            return response.content
+            let response = try await session.respond(to: prompt, generating: PolishedTranslation.self)
+            print("BT:\(response.content.refinedTranslation)")
+            return response.content.refinedTranslation
         } catch {
             print("Polishing error: \(error)")
             self.session = nil
