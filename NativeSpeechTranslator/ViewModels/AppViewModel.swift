@@ -1,7 +1,7 @@
 import AVFoundation
 import Combine
-import Foundation
 import Dependencies
+import Foundation
 
 @MainActor
 class AppViewModel: ObservableObject {
@@ -167,15 +167,16 @@ class AppViewModel: ObservableObject {
     }
 
     private func handleRecognitionResult(_ result: TranscriptionResult) {
-        let isAppleTranslation = UserDefaults.standard.string(forKey: "translationProvider") == "translation"
+        let isAppleTranslation =
+            UserDefaults.standard.string(forKey: "translationProvider") == "translation"
         let shouldTranslate = result.isFinal || isAppleTranslation
-        
+
         var targetIndex: Int?
-        
+
         if let lastIndex = transcripts.indices.last, !transcripts[lastIndex].isFinal {
             targetIndex = lastIndex
             transcripts[lastIndex].original = result.text
-            
+
             if result.isFinal {
                 transcripts[lastIndex].isFinal = true
                 transcripts[lastIndex].isShowLoading = true

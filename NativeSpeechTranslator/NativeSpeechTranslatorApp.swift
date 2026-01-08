@@ -10,7 +10,7 @@ struct NativeSpeechTranslatorApp: App {
                     TranslationHostView()
                 }
         }
-        
+
         Settings {
             SettingsView()
         }

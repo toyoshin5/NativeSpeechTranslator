@@ -3,7 +3,7 @@ import Translation
 
 struct SettingsView: View {
     @AppStorage("translationProvider") private var translationProvider: String = "foundation"
-    
+
     var body: some View {
         Form {
             Section("Translation Service") {
@@ -12,12 +12,15 @@ struct SettingsView: View {
                     Text("Translation").tag("translation")
                 }
                 .pickerStyle(.segmented)
-                
-                Text(translationProvider == "foundation" ? "Uses local LLM model." : "Uses Apple's system translation.")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+
+                Text(
+                    translationProvider == "foundation"
+                        ? "Uses local LLM model." : "Uses Apple's system translation."
+                )
+                .font(.caption)
+                .foregroundStyle(.secondary)
             }
-            
+
             if translationProvider == "translation" {
                 AppleTranslationSettingsView()
             }
@@ -31,19 +34,21 @@ struct AppleTranslationSettingsView: View {
     @State private var downloadConfiguration: TranslationSession.Configuration?
     @State private var status: LanguageAvailability.Status?
     @State private var errorMessage: String?
-    
+
     // We assume translation to Japanese for this app
     private let targetLanguage = Locale.Language(identifier: "ja")
-    
+
     var body: some View {
         Section("Offline Models (Target: Japanese)") {
             HStack {
                 if let status = status {
                     switch status {
                     case .installed:
-                        Label("Installed", systemImage: "checkmark.circle.fill").foregroundStyle(.green)
+                        Label("Installed", systemImage: "checkmark.circle.fill").foregroundStyle(
+                            .green)
                     case .supported:
-                        Label("Available to Download", systemImage: "arrow.down.circle").foregroundStyle(.orange)
+                        Label("Available to Download", systemImage: "arrow.down.circle")
+                            .foregroundStyle(.orange)
                     case .unsupported:
                         Label("Unsupported", systemImage: "xmark.circle").foregroundStyle(.red)
                     @unknown default:
@@ -52,9 +57,9 @@ struct AppleTranslationSettingsView: View {
                 } else {
                     ProgressView().controlSize(.small)
                 }
-                
+
                 Spacer()
-                
+
                 if status == .supported {
                     Button("Download") {
                         startDownload()
@@ -65,7 +70,7 @@ struct AppleTranslationSettingsView: View {
                     }
                 }
             }
-            
+
             if let errorMessage {
                 Text(errorMessage)
                     .font(.caption)
@@ -90,17 +95,18 @@ struct AppleTranslationSettingsView: View {
             downloadConfiguration = nil
         }
     }
-    
+
     private func startDownload() {
         // Trigger download/prepare
         // NOTE: We do not specify source to allow system to prepare generic 'to Japanese' if possible,
         // or we assume English->Japanese if source is needed for a specific pair.
-        // TranslationSession.Configuration docs suggest pair. 
+        // TranslationSession.Configuration docs suggest pair.
         // Let's try specifying current language as source for better matching.
         let source = Locale.current.language
-        downloadConfiguration = TranslationSession.Configuration(source: source, target: targetLanguage)
+        downloadConfiguration = TranslationSession.Configuration(
+            source: source, target: targetLanguage)
     }
-    
+
     private func checkStatus() async {
         let availability = LanguageAvailability()
         let source = Locale.current.language
