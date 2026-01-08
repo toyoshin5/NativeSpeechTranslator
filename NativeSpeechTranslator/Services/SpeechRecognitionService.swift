@@ -145,7 +145,10 @@ actor SpeechRecognitionService {
             return buffer
         }
 
-        if audioConverter == nil || audioConverter?.outputFormat != format {
+        if audioConverter == nil
+            || audioConverter?.inputFormat != inputFormat
+            || audioConverter?.outputFormat != format
+        {
             audioConverter = AVAudioConverter(from: inputFormat, to: format)
             audioConverter?.primeMethod = .none
         }
