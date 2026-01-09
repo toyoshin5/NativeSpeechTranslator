@@ -1,12 +1,6 @@
 import Foundation
 import FoundationModels
 
-@Generable
-struct PolishedTranslation {
-    @Guide(description: "The refined Japanese translation that is more fluent and natural")
-    var refinedTranslation: String
-}
-
 actor TranslationPolishingService {
 
     static let shared = TranslationPolishingService()
@@ -73,9 +67,9 @@ actor TranslationPolishingService {
             """
 
         do {
-            let response = try await session.respond(to: prompt, generating: PolishedTranslation.self)
-            print("BT:\(response.content.refinedTranslation)")
-            return response.content.refinedTranslation
+            let response = try await session.respond(to: prompt)
+            print("BT:\(response.content)")
+            return response.content
         } catch {
             print("Polishing error: \(error)")
             self.session = nil
