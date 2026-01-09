@@ -9,13 +9,15 @@ private struct ScrollOffsetPreferenceKey: PreferenceKey {
 
 struct AutoScrollView<Content: View, Item: Identifiable>: View {
     let items: [Item]
+    let isAutoScrollEnabled: Bool
     let content: (Item) -> Content
 
     @State private var scrollViewHeight: CGFloat = 0
     @State private var contentHeight: CGFloat = 0
 
-    init(items: [Item], @ViewBuilder content: @escaping (Item) -> Content) {
+    init(items: [Item], isAutoScrollEnabled: Bool = true, @ViewBuilder content: @escaping (Item) -> Content) {
         self.items = items
+        self.isAutoScrollEnabled = isAutoScrollEnabled
         self.content = content
     }
 
@@ -32,8 +34,10 @@ struct AutoScrollView<Content: View, Item: Identifiable>: View {
                 }
             }
             .onChange(of: items.count) { _, _ in
-                withAnimation {
-                    proxy.scrollTo("bottom-anchor", anchor: .bottom)
+                if isAutoScrollEnabled {
+                    withAnimation {
+                        proxy.scrollTo("bottom-anchor", anchor: .bottom)
+                    }
                 }
             }
         }

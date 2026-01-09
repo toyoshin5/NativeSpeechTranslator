@@ -30,6 +30,8 @@ struct ContentView: View {
     @State private var isExporting = false
     @State private var exportDocument: TranscriptDocument?
     @AppStorage("fontSize") private var fontSize: Double = 16.0
+    @AppStorage("selectedDeviceID") private var savedDeviceID: String = ""
+    @AppStorage("isAutoScrollEnabled") private var isAutoScrollEnabled: Bool = true
 
     var body: some View {
         VStack(spacing: 0) {
@@ -71,7 +73,7 @@ struct ContentView: View {
 
             Divider()
 
-            AutoScrollView(items: viewModel.transcripts) { item in
+            AutoScrollView(items: viewModel.transcripts, isAutoScrollEnabled: isAutoScrollEnabled) { item in
                 TranscriptRow(
                     original: item.original,
                     translation: item.translation,
@@ -82,6 +84,18 @@ struct ContentView: View {
                 Divider()
             }
             .background(Color(NSColor.controlBackgroundColor))
+            .overlay {
+                Button(action: {
+                    isAutoScrollEnabled.toggle()
+                }) {
+                    Image(systemName: isAutoScrollEnabled ? "arrow.down.to.line.circle.fill" : "arrow.down.to.line.circle")
+                        .foregroundStyle(isAutoScrollEnabled ? .blue : .secondary)
+                        .font(.largeTitle)
+                }
+                .buttonStyle(.plain)
+                .padding()
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomTrailing)
+            }
 
             Divider()
 
@@ -123,6 +137,16 @@ struct ContentView: View {
         ) { result in
             if case .failure(let error) = result {
                 print("Failed to save log: \(error)")
+            }
+        }
+        .onAppear {
+            if !savedDeviceID.isEmpty {
+                viewModel.selectedDeviceID = savedDeviceID
+            }
+        }
+        .onChange(of: viewModel.selectedDeviceID) { _, newValue in
+            if let newValue = newValue {
+                savedDeviceID = newValue
             }
         }
     }
