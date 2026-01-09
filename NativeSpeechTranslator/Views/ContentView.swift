@@ -64,7 +64,7 @@ struct ContentView: View {
                     Label("聞き取り中", systemImage: "recordingtape")
                         .foregroundColor(.red)
                 } else {
-                    Label("待機中", systemImage: "stop.fill")
+                    Label("停止中", systemImage: "stop.fill")
                         .foregroundColor(.gray)
                 }
             }
