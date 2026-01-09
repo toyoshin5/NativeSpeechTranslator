@@ -12,7 +12,7 @@ macOS Tahoe以降で動作するオフラインのリアルタイム音声認識
 LadioCast，BlackHole等を活用することで、zoom通話などから音声をキャプチャすることもできます
 
 1. `SpeechAnalyzer` による文字起こし
-2. `FoundationModels` による日本語翻訳
+2. `Translation`と`FoundationModels` による日本語翻訳
 
 ## 動作要件
 
