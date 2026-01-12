@@ -3,6 +3,7 @@ import Foundation
 
 struct TranslationClient {
     var translate: @Sendable (String) async -> String
+    var translateWithLLM: @Sendable (String, String) async -> String
     var reset: @Sendable () async -> Void
 }
 
@@ -14,33 +15,34 @@ extension DependencyValues {
 }
 
 extension TranslationClient: DependencyKey {
+    @MainActor
     static let liveValue = TranslationClient(
         translate: { text in
-            let provider =
-                UserDefaults.standard.string(forKey: "translationProvider") ?? "foundation"
-
-            if provider == "translation" {
-                do {
-                    return try await TranslationService.shared.translate(text)
-                } catch {
-                    return "Translation Error: \(error.localizedDescription)"
-                }
+            do {
+                return try await TranslationService.shared.translate(text)
+            } catch {
+                return "Translation Error: \(error.localizedDescription)"
             }
-            return await TranslationServiceLLM.shared.translate(text)
+        },
+        translateWithLLM: { original, direct in
+            @Dependency(\.translationLLMClient) var llmClient
+            return await llmClient.translate(original, direct)
         },
         reset: {
             await TranslationService.shared.reset()
-            await TranslationServiceLLM.shared.reset()
+            await FoundationModelService.shared.reset()
         }
     )
 
     static let testValue = TranslationClient(
         translate: { _ in "Test Translation" },
+        translateWithLLM: { _, direct in direct },
         reset: {}
     )
 
     static let previewValue = TranslationClient(
         translate: { _ in "Preview Translation" },
+        translateWithLLM: { _, _ in "Preview LLM Translation" },
         reset: {}
     )
 }

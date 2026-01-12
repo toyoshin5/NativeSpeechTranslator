@@ -3,8 +3,28 @@ import Translation
 import FoundationModels
 
 struct SettingsView: View {
-    @AppStorage("translationProvider") private var translationProvider: String = "foundation"
-    @AppStorage("polishingEnabled") private var polishingEnabled: Bool = true
+    @AppStorage("llmTranslationEnabled") private var llmTranslationEnabled: Bool = false
+    @AppStorage("llmProvider") private var llmProviderString: String = "foundation"
+    @AppStorage("llmModel") private var llmModel: String = "default"
+    @AppStorage("openaiAPIKey") private var openaiAPIKey: String = ""
+    @AppStorage("geminiAPIKey") private var geminiAPIKey: String = ""
+    @AppStorage("groqAPIKey") private var groqAPIKey: String = ""
+
+    @State private var connectionTestResult: ConnectionTestResult?
+    @State private var isTestingConnection = false
+
+    private var llmProvider: LLMProvider {
+        LLMProvider(rawValue: llmProviderString) ?? .foundation
+    }
+
+    private var currentAPIKey: String {
+        switch llmProvider {
+        case .openai: return openaiAPIKey
+        case .gemini: return geminiAPIKey
+        case .groq: return groqAPIKey
+        case .foundation: return ""
+        }
+    }
 
     private var isFoundationModelsAvailable: Bool {
         SystemLanguageModel.default.isAvailable
@@ -12,76 +32,139 @@ struct SettingsView: View {
 
     var body: some View {
         Form {
-            Section("Translation Service") {
-                Picker("Provider", selection: $translationProvider) {
-                    Text("Foundation Models").tag("foundation")
-                    Text("Translation").tag("translation")
-                }
-                .pickerStyle(.segmented)
+            Section("LLM翻訳") {
+                Toggle("LLM翻訳を有効化", isOn: $llmTranslationEnabled)
 
-                Text(
-                    translationProvider == "foundation"
-                        ? "Uses local LLM model." : "Uses Apple's system translation."
-                )
-                .font(.caption)
-                .foregroundStyle(.secondary)
+                if llmTranslationEnabled {
+                    Picker("プロバイダー", selection: $llmProviderString) {
+                        ForEach(LLMProvider.allCases) { provider in
+                            Text(provider.displayName).tag(provider.rawValue)
+                        }
+                    }
+                    .onChange(of: llmProviderString) { _, newValue in
+                        connectionTestResult = nil
+                        if let provider = LLMProvider(rawValue: newValue),
+                           let firstModel = provider.availableModels.first {
+                            llmModel = firstModel
+                        }
+                    }
+
+                    Picker("モデル", selection: $llmModel) {
+                        ForEach(llmProvider.availableModels, id: \.self) { model in
+                            Text(model).tag(model)
+                        }
+                    }
+
+                    if llmProvider == .foundation && !isFoundationModelsAvailable {
+                        Text("このデバイスではApple Intelligenceが利用できません")
+                            .font(.caption)
+                            .foregroundStyle(.red)
+                    }
+                }
             }
 
-            Section("Translation Polishing") {
-                Toggle(
-                    "Apple Intelligenceを用いた翻訳補正を有効化する",
-                    isOn: Binding(
-                        get: { isFoundationModelsAvailable && polishingEnabled },
-                        set: { polishingEnabled = $0 }
-                    )
-                )
-                .disabled(!isFoundationModelsAvailable)
+            if llmTranslationEnabled && llmProvider.requiresAPIKey {
+                Section("APIキー") {
+                    HStack {
+                        switch llmProvider {
+                        case .openai:
+                            SecureField("OpenAI API Key", text: $openaiAPIKey)
+                                .textFieldStyle(.roundedBorder)
+                                .onChange(of: openaiAPIKey) { _, _ in connectionTestResult = nil }
+                        case .gemini:
+                            SecureField("Gemini API Key", text: $geminiAPIKey)
+                                .textFieldStyle(.roundedBorder)
+                                .onChange(of: geminiAPIKey) { _, _ in connectionTestResult = nil }
+                        case .groq:
+                            SecureField("Groq API Key", text: $groqAPIKey)
+                                .textFieldStyle(.roundedBorder)
+                                .onChange(of: groqAPIKey) { _, _ in connectionTestResult = nil }
+                        case .foundation:
+                            EmptyView()
+                        }
 
-                if !isFoundationModelsAvailable {
-                    Text("このデバイスではApple Intelligenceが利用できません")
+                        Button(action: testConnection) {
+                            if isTestingConnection {
+                                ProgressView()
+                                    .controlSize(.small)
+                            } else {
+                                Text("確認")
+                            }
+                        }
+                        .disabled(currentAPIKey.isEmpty || isTestingConnection)
+                    }
+
+                    if let result = connectionTestResult {
+                        HStack {
+                            switch result {
+                            case .success:
+                                Label("接続成功", systemImage: "checkmark.circle.fill")
+                                    .foregroundStyle(.green)
+                            case .failure(let message):
+                                Label(message, systemImage: "xmark.circle.fill")
+                                    .foregroundStyle(.red)
+                            }
+                        }
                         .font(.caption)
-                        .foregroundStyle(.secondary)
+                    }
                 }
             }
 
-            if translationProvider == "translation" {
-                AppleTranslationSettingsView()
-            }
+            AppleTranslationSettingsView()
         }
         .padding()
-        .frame(width: 400, height: 300)
-        .onAppear {
-            if !isFoundationModelsAvailable {
-                polishingEnabled = false
+        .frame(width: 400, height: 380)
+    }
+
+    private func testConnection() {
+        isTestingConnection = true
+        connectionTestResult = nil
+
+        Task {
+            let result = await LLMTranslationService.testConnection(
+                provider: llmProvider,
+                model: llmModel,
+                apiKey: currentAPIKey
+            )
+
+            await MainActor.run {
+                isTestingConnection = false
+                switch result {
+                case .success:
+                    connectionTestResult = .success
+                case .failure(let error):
+                    connectionTestResult = .failure(error.localizedDescription)
+                }
             }
         }
     }
 }
 
+enum ConnectionTestResult {
+    case success
+    case failure(String)
+}
 
 struct AppleTranslationSettingsView: View {
     @State private var downloadConfiguration: TranslationSession.Configuration?
     @State private var status: LanguageAvailability.Status?
     @State private var errorMessage: String?
 
-    // We assume translation to Japanese for this app
     private let targetLanguage = Locale.Language(identifier: "ja")
 
     var body: some View {
-        Section("Offline Models (Target: Japanese)") {
+        Section("オフラインモデル (日本語翻訳)") {
             HStack {
                 if let status = status {
                     switch status {
                     case .installed:
-                        Label("Installed", systemImage: "checkmark.circle.fill").foregroundStyle(
-                            .green)
+                        Label("インストール済み", systemImage: "checkmark.circle.fill").foregroundStyle(.green)
                     case .supported:
-                        Label("Available to Download", systemImage: "arrow.down.circle")
-                            .foregroundStyle(.orange)
+                        Label("ダウンロード可能", systemImage: "arrow.down.circle").foregroundStyle(.orange)
                     case .unsupported:
-                        Label("Unsupported", systemImage: "xmark.circle").foregroundStyle(.red)
+                        Label("非対応", systemImage: "xmark.circle").foregroundStyle(.red)
                     @unknown default:
-                        Text("Unknown Status")
+                        Text("不明なステータス")
                     }
                 } else {
                     ProgressView().controlSize(.small)
@@ -90,11 +173,11 @@ struct AppleTranslationSettingsView: View {
                 Spacer()
 
                 if status == .supported {
-                    Button("Download") {
+                    Button("ダウンロード") {
                         startDownload()
                     }
                 } else if status == .installed {
-                    Button("Check Again") {
+                    Button("再確認") {
                         Task { await checkStatus() }
                     }
                 }
@@ -126,14 +209,8 @@ struct AppleTranslationSettingsView: View {
     }
 
     private func startDownload() {
-        // Trigger download/prepare
-        // NOTE: We do not specify source to allow system to prepare generic 'to Japanese' if possible,
-        // or we assume English->Japanese if source is needed for a specific pair.
-        // TranslationSession.Configuration docs suggest pair.
-        // Let's try specifying current language as source for better matching.
         let source = Locale.current.language
-        downloadConfiguration = TranslationSession.Configuration(
-            source: source, target: targetLanguage)
+        downloadConfiguration = TranslationSession.Configuration(source: source, target: targetLanguage)
     }
 
     private func checkStatus() async {

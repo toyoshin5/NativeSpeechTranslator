@@ -1,0 +1,76 @@
+import Dependencies
+import Foundation
+
+actor LLMTranslationService {
+    static let shared = LLMTranslationService()
+
+    private var currentTask: Task<String, Never>?
+
+    private init() {}
+
+    func translate(original: String, direct: String) async -> String {
+        let providerString = UserDefaults.standard.string(forKey: "llmProvider") ?? "foundation"
+        let provider = LLMProvider(rawValue: providerString) ?? .foundation
+        let model = UserDefaults.standard.string(forKey: "llmModel") ?? provider.availableModels.first ?? ""
+
+        let task = Task<String, Never> {
+            switch provider {
+            case .openai:
+                return await OpenAICompatibleClient.translate(
+                    original: original,
+                    direct: direct,
+                    model: model,
+                    apiKey: UserDefaults.standard.string(forKey: "openaiAPIKey") ?? "",
+                    baseURL: "https://api.openai.com/v1/chat/completions"
+                )
+            case .groq:
+                return await OpenAICompatibleClient.translate(
+                    original: original,
+                    direct: direct,
+                    model: model,
+                    apiKey: UserDefaults.standard.string(forKey: "groqAPIKey") ?? "",
+                    baseURL: "https://api.groq.com/openai/v1/chat/completions"
+                )
+            case .gemini:
+                return await GeminiClient.translate(
+                    original: original,
+                    direct: direct,
+                    model: model,
+                    apiKey: UserDefaults.standard.string(forKey: "geminiAPIKey") ?? ""
+                )
+            case .foundation:
+                return await FoundationModelService.shared.refine(original: original, direct: direct)
+            }
+        }
+
+        currentTask = task
+        return await task.value
+    }
+
+    func reset() {
+        currentTask?.cancel()
+        currentTask = nil
+        Task { await FoundationModelService.shared.reset() }
+    }
+
+    static func testConnection(provider: LLMProvider, model: String, apiKey: String) async -> Result<Void, Error> {
+        switch provider {
+        case .openai:
+            return await OpenAICompatibleClient.testConnection(
+                model: model,
+                apiKey: apiKey,
+                baseURL: "https://api.openai.com/v1/chat/completions"
+            )
+        case .groq:
+            return await OpenAICompatibleClient.testConnection(
+                model: model,
+                apiKey: apiKey,
+                baseURL: "https://api.groq.com/openai/v1/chat/completions"
+            )
+        case .gemini:
+            return await GeminiClient.testConnection(model: model, apiKey: apiKey)
+        case .foundation:
+            return .success(())
+        }
+    }
+}

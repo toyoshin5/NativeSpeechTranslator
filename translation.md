@@ -1,21 +1,26 @@
 ## 仕様変更
 
-TranslationServiceで翻訳した結果を，更にAppleのFoundation Modelsで校正するような設計にしてほしいです。
-英文を校正するためのService actorを新たに作成して，訳文を校正させてください．
+アプリの設計として，TranslationClient.swiftによる直訳は必ず行ったうえで，isFinalのタイミングで，TranslationLLMClient.swiftによるLLMを使った翻訳を行うという流れに変更します．LLMを使った翻訳をするかどうかは設定画面で選択できます．
 
-作成のタイミングはisFinal=trueによるそのTranscriptItemで最後の翻訳を行ったタイミングでお願いします．
+TranslationClient.swift を参考に，(というか同じインタフェースの)TranslationLLMClient.swift を作成してください．
 
-校正するactorへ与えるのは，翻訳前の文:stringと翻訳後の文:stringでお願いします．
+TranslationLLMClientでは，LLMによる翻訳を行います．翻訳は以下のモデルに対応させます．
 
-プロンプトの内容は，
-翻訳前の文を翻訳後の文にしましたが，過去の文脈なども考慮して流暢な言葉になるようにしてほしい．みたいな内容(英語)でお願いします．
+- OpenAI: gpt-4o-mini (最新の最も安いモデルを調べて)
+- Gemini: gemini-3.0-flash (最新の最も安いモデルを調べて)
+- Groq: llama-3.3-70b-versatile, llama-3.1-8b-instruct
+- Foundation Models: 既存のコードを参考にする(APIキー不要)
 
-翻訳の校正中は，Loadingなどの表示はせずに，TranslationServiceで翻訳した結果を表示しておいてください．
+それぞれAPIキーを登録できるような設定画面を設けて，そこで設定できるようにしてほしいです．
 
-翻訳の校正もTranslationServiceLLMを同様にキューを使用し，1つずつ実行してください．
+## 設定画面
+既存のsegment controlとは削除します．，代わりにLLMを用いた翻訳を行うかどうかを選択できるような設定画面を設けたいです．オンのときは，使用する会社とモデルを選び，それぞれAPIキーを入力して保存できるようにしてほしいです．
 
-翻訳の校正結果は，TranslationServiceで翻訳した結果を新規クラスで校正したものに置き換えてください．
+## 削除するファイル
 
-Foundation Modelsの使い方はTranslationServiceLLMの実装を参考にしてください．
+TranslationServiceLLM
+TranslationPolishingService
 
+## 備考
+ファイル構造も整えてほしい
 

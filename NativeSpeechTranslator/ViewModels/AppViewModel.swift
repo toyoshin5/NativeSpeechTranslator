@@ -131,7 +131,6 @@ class AppViewModel: ObservableObject {
         transcripts.removeAll()
         Task {
             await translationClient.reset()
-            await TranslationPolishingService.shared.reset()
         }
     }
 
@@ -171,9 +170,7 @@ class AppViewModel: ObservableObject {
     }
 
     private func handleRecognitionResult(_ result: TranscriptionResult) {
-        let isAppleTranslation =
-            UserDefaults.standard.string(forKey: "translationProvider") == "translation"
-        let shouldTranslate = result.isFinal || isAppleTranslation
+        let shouldTranslate = true
 
         var targetIndex: Int?
 
@@ -210,14 +207,11 @@ class AppViewModel: ObservableObject {
                 transcripts[index].isShowLoading = false
 
                 if isFinal {
-                    let polishingEnabled = UserDefaults.standard.bool(forKey: "polishingEnabled")
-                    if polishingEnabled {
-                        let polished = await TranslationPolishingService.shared.polish(
-                            originalText: text,
-                            translatedText: translation
-                        )
+                    let llmEnabled = UserDefaults.standard.bool(forKey: "llmTranslationEnabled")
+                    if llmEnabled {
+                        let refined = await translationClient.translateWithLLM(text, translation)
                         if index < transcripts.count {
-                            transcripts[index].translation = polished
+                            transcripts[index].translation = refined
                         }
                     }
                 }
