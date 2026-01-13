@@ -121,7 +121,6 @@ struct GeneralSettingsView: View {
                                     .foregroundStyle(.red)
                             }
                         }
-                        .font(.caption)
                     }
                 }
             }
