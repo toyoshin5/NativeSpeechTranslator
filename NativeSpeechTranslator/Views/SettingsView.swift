@@ -8,6 +8,7 @@ struct SettingsView: View {
     @AppStorage("llmModel") private var llmModel: String = "default"
     @AppStorage("openaiAPIKey") private var openaiAPIKey: String = ""
     @AppStorage("groqAPIKey") private var groqAPIKey: String = ""
+    @AppStorage("cerebrasAPIKey") private var cerebrasAPIKey: String = ""
 
     @State private var connectionTestResult: ConnectionTestResult?
     @State private var isTestingConnection = false
@@ -20,6 +21,7 @@ struct SettingsView: View {
         switch llmProvider {
         case .openai: return openaiAPIKey
         case .groq: return groqAPIKey
+        case .cerebras: return cerebrasAPIKey
         case .foundation: return ""
         }
     }
@@ -73,6 +75,10 @@ struct SettingsView: View {
                             SecureField("Groq API Key", text: $groqAPIKey)
                                 .textFieldStyle(.roundedBorder)
                                 .onChange(of: groqAPIKey) { _, _ in connectionTestResult = nil }
+                        case .cerebras:
+                            SecureField("Cerebras API Key", text: $cerebrasAPIKey)
+                                .textFieldStyle(.roundedBorder)
+                                .onChange(of: cerebrasAPIKey) { _, _ in connectionTestResult = nil }
                         case .foundation:
                             EmptyView()
                         }

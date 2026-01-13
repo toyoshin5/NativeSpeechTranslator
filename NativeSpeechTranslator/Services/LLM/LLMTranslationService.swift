@@ -31,6 +31,14 @@ actor LLMTranslationService {
                     apiKey: UserDefaults.standard.string(forKey: "groqAPIKey") ?? "",
                     baseURL: "https://api.groq.com/openai/v1/chat/completions"
                 )
+            case .cerebras:
+                return await OpenAICompatibleClient.translate(
+                    original: original,
+                    direct: direct,
+                    model: model,
+                    apiKey: UserDefaults.standard.string(forKey: "cerebrasAPIKey") ?? "",
+                    baseURL: "https://api.cerebras.ai/v1/chat/completions"
+                )
             case .foundation:
                 return await FoundationModelService.shared.refine(original: original, direct: direct)
             }
@@ -59,6 +67,12 @@ actor LLMTranslationService {
                 model: model,
                 apiKey: apiKey,
                 baseURL: "https://api.groq.com/openai/v1/chat/completions"
+            )
+        case .cerebras:
+            return await OpenAICompatibleClient.testConnection(
+                model: model,
+                apiKey: apiKey,
+                baseURL: "https://api.cerebras.ai/v1/chat/completions"
             )
         case .foundation:
             return .success(())
