@@ -13,7 +13,7 @@ struct NativeSpeechTranslatorApp: App {
 
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            HomeView()
                 .background {
                     TranslationHostView()
                 }

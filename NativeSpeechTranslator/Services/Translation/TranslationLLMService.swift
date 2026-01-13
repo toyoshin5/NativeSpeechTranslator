@@ -1,8 +1,8 @@
 import Dependencies
 import Foundation
 
-actor LLMTranslationService {
-    static let shared = LLMTranslationService()
+actor TranslationLLMService {
+    static let shared = TranslationLLMService()
 
     private var currentTask: Task<String, Never>?
 
@@ -16,7 +16,7 @@ actor LLMTranslationService {
         let task = Task<String, Never> {
             switch provider {
             case .openai:
-                return await OpenAICompatibleClient.translate(
+                return await OpenAICompatibleService.translate(
                     original: original,
                     direct: direct,
                     model: model,
@@ -24,7 +24,7 @@ actor LLMTranslationService {
                     baseURL: "https://api.openai.com/v1/chat/completions"
                 )
             case .groq:
-                return await OpenAICompatibleClient.translate(
+                return await OpenAICompatibleService.translate(
                     original: original,
                     direct: direct,
                     model: model,
@@ -32,7 +32,7 @@ actor LLMTranslationService {
                     baseURL: "https://api.groq.com/openai/v1/chat/completions"
                 )
             case .cerebras:
-                return await OpenAICompatibleClient.translate(
+                return await OpenAICompatibleService.translate(
                     original: original,
                     direct: direct,
                     model: model,
@@ -57,19 +57,19 @@ actor LLMTranslationService {
     static func testConnection(provider: LLMProvider, model: String, apiKey: String) async -> Result<Void, Error> {
         switch provider {
         case .openai:
-            return await OpenAICompatibleClient.testConnection(
+            return await OpenAICompatibleService.testConnection(
                 model: model,
                 apiKey: apiKey,
                 baseURL: "https://api.openai.com/v1/chat/completions"
             )
         case .groq:
-            return await OpenAICompatibleClient.testConnection(
+            return await OpenAICompatibleService.testConnection(
                 model: model,
                 apiKey: apiKey,
                 baseURL: "https://api.groq.com/openai/v1/chat/completions"
             )
         case .cerebras:
-            return await OpenAICompatibleClient.testConnection(
+            return await OpenAICompatibleService.testConnection(
                 model: model,
                 apiKey: apiKey,
                 baseURL: "https://api.cerebras.ai/v1/chat/completions"

@@ -25,8 +25,7 @@ extension TranslationClient: DependencyKey {
             }
         },
         translateWithLLM: { original, direct in
-            @Dependency(\.translationLLMClient) var llmClient
-            return await llmClient.translate(original, direct)
+            await TranslationLLMService.shared.translate(original: original, direct: direct)
         },
         reset: {
             await TranslationService.shared.reset()

@@ -4,7 +4,7 @@ import Dependencies
 import Foundation
 
 @MainActor
-class AppViewModel: ObservableObject {
+class HomeViewModel: ObservableObject {
 
     struct TranscriptItem: Identifiable {
         let id = UUID()

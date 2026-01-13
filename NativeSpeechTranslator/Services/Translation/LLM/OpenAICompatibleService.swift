@@ -1,6 +1,6 @@
 import Foundation
 
-enum OpenAICompatibleClient {
+enum OpenAICompatibleService {
     struct Request: Encodable {
         let model: String
         let messages: [Message]

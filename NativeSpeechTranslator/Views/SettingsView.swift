@@ -128,7 +128,7 @@ struct SettingsView: View {
         connectionTestResult = nil
 
         Task {
-            let result = await LLMTranslationService.testConnection(
+            let result = await TranslationLLMService.testConnection(
                 provider: llmProvider,
                 model: llmModel,
                 apiKey: currentAPIKey

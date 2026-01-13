@@ -24,9 +24,9 @@ struct TranscriptDocument: FileDocument {
     }
 }
 
-struct ContentView: View {
+struct HomeView: View {
 
-    @StateObject private var viewModel = AppViewModel()
+    @StateObject private var viewModel = HomeViewModel()
     @State private var isExporting = false
     @State private var exportDocument: TranscriptDocument?
     @AppStorage("fontSize") private var fontSize: Double = 16.0

@@ -7,7 +7,7 @@ struct LogExporter {
         let success: Bool
     }
 
-    static func export(transcripts: [AppViewModel.TranscriptItem]) -> String {
+    static func export(transcripts: [HomeViewModel.TranscriptItem]) -> String {
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "yyyy-MM-dd HH:mm:ss"
         let timestamp = dateFormatter.string(from: Date())
@@ -52,7 +52,7 @@ struct LogExporter {
         return content
     }
 
-    static func saveToFile(transcripts: [AppViewModel.TranscriptItem], directory: URL) throws -> URL
+    static func saveToFile(transcripts: [HomeViewModel.TranscriptItem], directory: URL) throws -> URL
     {
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "yyyyMMdd_HHmmss"
