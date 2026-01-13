@@ -26,6 +26,20 @@ struct SettingsView: View {
         }
     }
 
+    private var providerBinding: Binding<String> {
+        Binding(
+            get: { llmProviderString },
+            set: { newValue in
+                llmProviderString = newValue
+                connectionTestResult = nil
+                if let provider = LLMProvider(rawValue: newValue),
+                   let firstModel = provider.availableModels.first {
+                    llmModel = firstModel
+                }
+            }
+        )
+    }
+
     private var isFoundationModelsAvailable: Bool {
         SystemLanguageModel.default.isAvailable
     }
@@ -36,16 +50,9 @@ struct SettingsView: View {
                 Toggle("LLM翻訳を有効化", isOn: $llmTranslationEnabled)
 
                 if llmTranslationEnabled {
-                    Picker("プロバイダー", selection: $llmProviderString) {
+                    Picker("プロバイダー", selection: providerBinding) {
                         ForEach(LLMProvider.allCases) { provider in
                             Text(provider.displayName).tag(provider.rawValue)
-                        }
-                    }
-                    .onChange(of: llmProviderString) { _, newValue in
-                        connectionTestResult = nil
-                        if let provider = LLMProvider(rawValue: newValue),
-                           let firstModel = provider.availableModels.first {
-                            llmModel = firstModel
                         }
                     }
 
