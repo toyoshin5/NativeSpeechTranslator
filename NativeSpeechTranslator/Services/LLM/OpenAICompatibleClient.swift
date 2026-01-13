@@ -4,7 +4,6 @@ enum OpenAICompatibleClient {
     struct Request: Encodable {
         let model: String
         let messages: [Message]
-        let temperature: Double
 
         struct Message: Encodable {
             let role: String
@@ -34,7 +33,6 @@ enum OpenAICompatibleClient {
                 Request.Message(role: "system", content: TranslationPrompt.systemPrompt),
                 Request.Message(role: "user", content: TranslationPrompt.userPrompt(original: original, direct: direct))
             ],
-            temperature: 0.3
         )
 
         var urlRequest = URLRequest(url: url)
@@ -62,7 +60,6 @@ enum OpenAICompatibleClient {
         let request = Request(
             model: model,
             messages: [Request.Message(role: "user", content: TranslationPrompt.testMessage)],
-            temperature: 0.3
         )
 
         var urlRequest = URLRequest(url: url)
