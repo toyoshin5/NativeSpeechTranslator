@@ -2,7 +2,7 @@ import SwiftUI
 import Translation
 import FoundationModels
 
-struct SettingsView: View {
+struct GeneralSettingsView: View {
     @AppStorage("llmTranslationEnabled") private var llmTranslationEnabled: Bool = false
     @AppStorage("llmProvider") private var llmProviderString: String = "foundation"
     @AppStorage("llmModel") private var llmModel: String = "default"
@@ -46,20 +46,29 @@ struct SettingsView: View {
 
     var body: some View {
         Form {
+            AppleTranslationSettingsView()
             Section("LLM翻訳") {
                 Toggle("LLM翻訳を有効化", isOn: $llmTranslationEnabled)
 
                 if llmTranslationEnabled {
-                    Picker("プロバイダー", selection: providerBinding) {
-                        ForEach(LLMProvider.allCases) { provider in
-                            Text(provider.displayName).tag(provider.rawValue)
+                    LabeledContent("プロバイダー") {
+                        Picker("", selection: providerBinding) {
+                            ForEach(LLMProvider.allCases) { provider in
+                                Text(provider.displayName).tag(provider.rawValue)
+                            }
                         }
+                        .labelsHidden()
+                        .fixedSize()
                     }
 
-                    Picker("モデル", selection: $llmModel) {
-                        ForEach(llmProvider.availableModels, id: \.self) { model in
-                            Text(model).tag(model)
+                    LabeledContent("モデル") {
+                        Picker("", selection: $llmModel) {
+                            ForEach(llmProvider.availableModels, id: \.self) { model in
+                                Text(model).tag(model)
+                            }
                         }
+                        .labelsHidden()
+                        .fixedSize()
                     }
 
                     if llmProvider == .foundation && !isFoundationModelsAvailable {
@@ -116,11 +125,9 @@ struct SettingsView: View {
                     }
                 }
             }
-
-            AppleTranslationSettingsView()
         }
+        .formStyle(.grouped)
         .padding()
-        .frame(width: 400, height: 380)
     }
 
     private func testConnection() {
@@ -152,82 +159,6 @@ enum ConnectionTestResult {
     case failure(String)
 }
 
-struct AppleTranslationSettingsView: View {
-    @State private var downloadConfiguration: TranslationSession.Configuration?
-    @State private var status: LanguageAvailability.Status?
-    @State private var errorMessage: String?
-
-    private let targetLanguage = Locale.Language(identifier: "ja")
-
-    var body: some View {
-        Section("オフラインモデル (日本語翻訳)") {
-            HStack {
-                if let status = status {
-                    switch status {
-                    case .installed:
-                        Label("インストール済み", systemImage: "checkmark.circle.fill").foregroundStyle(.green)
-                    case .supported:
-                        Label("ダウンロード可能", systemImage: "arrow.down.circle").foregroundStyle(.orange)
-                    case .unsupported:
-                        Label("非対応", systemImage: "xmark.circle").foregroundStyle(.red)
-                    @unknown default:
-                        Text("不明なステータス")
-                    }
-                } else {
-                    ProgressView().controlSize(.small)
-                }
-
-                Spacer()
-
-                if status == .supported {
-                    Button("ダウンロード") {
-                        startDownload()
-                    }
-                } else if status == .installed {
-                    Button("再確認") {
-                        Task { await checkStatus() }
-                    }
-                }
-            }
-
-            if let errorMessage {
-                Text(errorMessage)
-                    .font(.caption)
-                    .foregroundStyle(.red)
-            }
-        }
-        .task {
-            await checkStatus()
-        }
-        .translationTask(downloadConfiguration) { session in
-            do {
-                if let config = downloadConfiguration {
-                    print("Starting preparation for \(config)")
-                    try await session.prepareTranslation()
-                    print("Preparation complete")
-                    await checkStatus()
-                }
-            } catch {
-                print("Prepare error: \(error)")
-                self.errorMessage = error.localizedDescription
-            }
-            downloadConfiguration = nil
-        }
-    }
-
-    private func startDownload() {
-        let source = Locale.current.language
-        downloadConfiguration = TranslationSession.Configuration(source: source, target: targetLanguage)
-    }
-
-    private func checkStatus() async {
-        let availability = LanguageAvailability()
-        let source = Locale.current.language
-        let status = await availability.status(from: source, to: targetLanguage)
-        self.status = status
-    }
-}
-
 #Preview {
-    SettingsView()
+    GeneralSettingsView()
 }
