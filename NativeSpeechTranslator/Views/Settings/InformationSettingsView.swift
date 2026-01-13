@@ -9,7 +9,7 @@ struct InformationSettingsView: View {
                 .foregroundStyle(.secondary)
 
             VStack(spacing: 8) {
-                Text("NativeSpeechTranslator")
+                Text("Native Speech Translator")
                     .font(.title2)
                     .fontWeight(.medium)
 
