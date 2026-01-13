@@ -7,7 +7,6 @@ struct SettingsView: View {
     @AppStorage("llmProvider") private var llmProviderString: String = "foundation"
     @AppStorage("llmModel") private var llmModel: String = "default"
     @AppStorage("openaiAPIKey") private var openaiAPIKey: String = ""
-    @AppStorage("geminiAPIKey") private var geminiAPIKey: String = ""
     @AppStorage("groqAPIKey") private var groqAPIKey: String = ""
 
     @State private var connectionTestResult: ConnectionTestResult?
@@ -20,7 +19,6 @@ struct SettingsView: View {
     private var currentAPIKey: String {
         switch llmProvider {
         case .openai: return openaiAPIKey
-        case .gemini: return geminiAPIKey
         case .groq: return groqAPIKey
         case .foundation: return ""
         }
@@ -71,10 +69,6 @@ struct SettingsView: View {
                             SecureField("OpenAI API Key", text: $openaiAPIKey)
                                 .textFieldStyle(.roundedBorder)
                                 .onChange(of: openaiAPIKey) { _, _ in connectionTestResult = nil }
-                        case .gemini:
-                            SecureField("Gemini API Key", text: $geminiAPIKey)
-                                .textFieldStyle(.roundedBorder)
-                                .onChange(of: geminiAPIKey) { _, _ in connectionTestResult = nil }
                         case .groq:
                             SecureField("Groq API Key", text: $groqAPIKey)
                                 .textFieldStyle(.roundedBorder)

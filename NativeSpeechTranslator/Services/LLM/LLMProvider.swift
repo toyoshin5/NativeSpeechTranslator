@@ -2,7 +2,6 @@ import Foundation
 
 enum LLMProvider: String, CaseIterable, Identifiable {
     case openai
-    case gemini
     case groq
     case foundation
 
@@ -11,7 +10,6 @@ enum LLMProvider: String, CaseIterable, Identifiable {
     var displayName: String {
         switch self {
         case .openai: return "OpenAI"
-        case .gemini: return "Gemini"
         case .groq: return "Groq"
         case .foundation: return "Foundation Models"
         }
@@ -19,9 +17,8 @@ enum LLMProvider: String, CaseIterable, Identifiable {
 
     var availableModels: [String] {
         switch self {
-        case .openai: return ["gpt-4o-mini"]
-        case .gemini: return ["gemini-2.0-flash"]
-        case .groq: return ["llama-3.3-70b-versatile", "llama-3.1-8b-instant"]
+        case .openai: return ["gpt-5-mini","gpt-5-nano"]
+        case .groq: return ["llama-3.3-70b-versatile", "openai/gpt-oss-120b"]
         case .foundation: return ["default"]
         }
     }
@@ -34,8 +31,8 @@ enum LLMProvider: String, CaseIterable, Identifiable {
 enum TranslationPrompt {
     static let systemPrompt = """
         You are a professional English-to-Japanese translator.
-        You will receive the original English text and its direct translation.
-        Refine the translation to make it more natural and fluent in Japanese.
+        You will receive English text that originates from speech recognition and may contain errors (e.g., phonetic mix-ups, missing punctuation, homophones).
+        Your task is to infer the speaker's intended meaning, correcting any transcription errors based on context, and translate it into natural, fluent Japanese.
         Output only the refined Japanese translation without any explanation.
         """
 

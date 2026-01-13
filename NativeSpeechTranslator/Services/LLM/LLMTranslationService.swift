@@ -31,13 +31,6 @@ actor LLMTranslationService {
                     apiKey: UserDefaults.standard.string(forKey: "groqAPIKey") ?? "",
                     baseURL: "https://api.groq.com/openai/v1/chat/completions"
                 )
-            case .gemini:
-                return await GeminiClient.translate(
-                    original: original,
-                    direct: direct,
-                    model: model,
-                    apiKey: UserDefaults.standard.string(forKey: "geminiAPIKey") ?? ""
-                )
             case .foundation:
                 return await FoundationModelService.shared.refine(original: original, direct: direct)
             }
@@ -67,8 +60,6 @@ actor LLMTranslationService {
                 apiKey: apiKey,
                 baseURL: "https://api.groq.com/openai/v1/chat/completions"
             )
-        case .gemini:
-            return await GeminiClient.testConnection(model: model, apiKey: apiKey)
         case .foundation:
             return .success(())
         }
