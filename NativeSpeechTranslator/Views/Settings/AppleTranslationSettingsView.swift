@@ -2,14 +2,23 @@ import SwiftUI
 import Translation
 
 struct AppleTranslationSettingsView: View {
+    @AppStorage("sourceLanguage") var sourceLanguageIdentifier: String = "en-US"
+    @AppStorage("targetLanguage") var targetLanguageIdentifier: String = "ja-JP"
+
     @State private var downloadConfiguration: TranslationSession.Configuration?
     @State private var status: LanguageAvailability.Status?
     @State private var errorMessage: String?
 
-    private let targetLanguage = Locale.Language(identifier: "ja")
+    private var sourceLanguage: Locale.Language {
+        Locale.Language(identifier: sourceLanguageIdentifier)
+    }
+
+    private var targetLanguage: Locale.Language {
+        Locale.Language(identifier: targetLanguageIdentifier)
+    }
 
     var body: some View {
-        Section("翻訳モデル") {
+        Section("翻訳モデル (\(sourceLanguageIdentifier) → \(targetLanguageIdentifier))") {
             HStack {
                 if let status = status {
                     switch status {
@@ -45,9 +54,8 @@ struct AppleTranslationSettingsView: View {
                     .foregroundStyle(.red)
             }
         }
-        .task {
-            await checkStatus()
-        }
+        .task(id: sourceLanguageIdentifier) { await checkStatus() }
+        .task(id: targetLanguageIdentifier) { await checkStatus() }
         .translationTask(downloadConfiguration) { session in
             do {
                 if let config = downloadConfiguration {
@@ -65,14 +73,12 @@ struct AppleTranslationSettingsView: View {
     }
 
     private func startDownload() {
-        let source = Locale.current.language
-        downloadConfiguration = TranslationSession.Configuration(source: source, target: targetLanguage)
+        downloadConfiguration = TranslationSession.Configuration(source: sourceLanguage, target: targetLanguage)
     }
 
     private func checkStatus() async {
         let availability = LanguageAvailability()
-        let source = Locale.current.language
-        let status = await availability.status(from: source, to: targetLanguage)
+        let status = await availability.status(from: sourceLanguage, to: targetLanguage)
         self.status = status
     }
 }

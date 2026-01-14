@@ -33,6 +33,8 @@ struct HomeView: View {
     @AppStorage("selectedDeviceID") private var savedDeviceID: String = ""
     @AppStorage("isAutoScrollEnabled") private var isAutoScrollEnabled: Bool = true
 
+    @AppStorage("sourceLanguage") private var sourceLanguage: String = "en-US"
+
     var body: some View {
         VStack(spacing: 0) {
             HStack {
@@ -140,6 +142,9 @@ struct HomeView: View {
             if let newValue = newValue {
                 savedDeviceID = newValue
             }
+        }
+        .onChange(of: sourceLanguage) { _, _ in
+            viewModel.handleSourceLanguageChange()
         }
     }
 

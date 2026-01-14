@@ -29,6 +29,22 @@ class HomeViewModel: ObservableObject {
         }
     }
 
+    private var sourceLanguageIdentifier: String {
+        UserDefaults.standard.string(forKey: "sourceLanguage") ?? "en-US"
+    }
+    
+    private var targetLanguageIdentifier: String {
+        UserDefaults.standard.string(forKey: "targetLanguage") ?? "ja-JP"
+    }
+
+    private var sourceLocale: Locale {
+        Locale(identifier: sourceLanguageIdentifier)
+    }
+
+    private var targetLocale: Locale {
+        Locale(identifier: targetLanguageIdentifier)
+    }
+
     private let audioService = AudioCaptureService.shared
     private let recognitionService = SpeechRecognitionService.shared
     @Dependency(\.translationClient) var translationClient
@@ -54,6 +70,7 @@ class HomeViewModel: ObservableObject {
             }
         }
     }
+    // ... existing monitoring methods ...
 
     private func startStandaloneLevelMonitoring() {
         levelMonitoringTask?.cancel()
@@ -85,7 +102,7 @@ class HomeViewModel: ObservableObject {
     func startRecording() {
         guard !isRecording else { return }
         isRecording = true
-
+        
         stopStandaloneLevelMonitoring()
 
         Task {
@@ -93,7 +110,9 @@ class HomeViewModel: ObservableObject {
                 let audioStream = try await audioService.startStream()
 
                 let transcriptionStream = await recognitionService.startRecognition(
-                    audioStream: audioStream)
+                    audioStream: audioStream,
+                    locale: sourceLocale
+                )
 
                 let levelStream = await audioService.startLevelMonitoring()
 
@@ -134,6 +153,12 @@ class HomeViewModel: ObservableObject {
         }
     }
 
+    func handleSourceLanguageChange() {
+        if isRecording {
+            restartRecording()
+        }
+    }
+
     private func restartRecording() {
         Task {
             await audioService.stopStream()
@@ -145,7 +170,9 @@ class HomeViewModel: ObservableObject {
                 let audioStream = try await audioService.startStream()
 
                 let transcriptionStream = await recognitionService.startRecognition(
-                    audioStream: audioStream)
+                    audioStream: audioStream,
+                    locale: sourceLocale
+                )
 
                 let levelStream = await audioService.startLevelMonitoring()
 
@@ -209,7 +236,10 @@ class HomeViewModel: ObservableObject {
                 if isFinal {
                     let llmEnabled = UserDefaults.standard.bool(forKey: "llmTranslationEnabled")
                     if llmEnabled {
-                        let refined = await translationClient.translateWithLLM(text, translation)
+                        let sourceName = Locale(identifier: "en").localizedString(forIdentifier: sourceLanguageIdentifier) ?? sourceLanguageIdentifier
+                        let targetName = Locale(identifier: "en").localizedString(forIdentifier: targetLanguageIdentifier) ?? targetLanguageIdentifier
+                        
+                        let refined = await translationClient.translateWithLLM(text, translation, sourceName, targetName)
                         if index < transcripts.count {
                             transcripts[index].translation = refined
                         }

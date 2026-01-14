@@ -3,7 +3,8 @@ import Foundation
 
 struct TranslationClient {
     var translate: @Sendable (String) async -> String
-    var translateWithLLM: @Sendable (String, String) async -> String
+    var translateWithLLM: @Sendable (String, String, String, String) async -> String
+    var updateLanguages: @Sendable (Locale, Locale) async -> Void
     var reset: @Sendable () async -> Void
 }
 
@@ -24,8 +25,16 @@ extension TranslationClient: DependencyKey {
                 return "Translation Error: \(error.localizedDescription)"
             }
         },
-        translateWithLLM: { original, direct in
-            await TranslationLLMService.shared.translate(original: original, direct: direct)
+        translateWithLLM: { original, direct, sourceLanguage, targetLanguage in
+            await TranslationLLMService.shared.translate(
+                original: original,
+                direct: direct,
+                sourceLanguage: sourceLanguage,
+                targetLanguage: targetLanguage
+            )
+        },
+        updateLanguages: { source, target in
+            await TranslationService.shared.setLanguages(source: source, target: target)
         },
         reset: {
             await TranslationService.shared.reset()
@@ -35,13 +44,15 @@ extension TranslationClient: DependencyKey {
 
     static let testValue = TranslationClient(
         translate: { _ in "Test Translation" },
-        translateWithLLM: { _, direct in direct },
+        translateWithLLM: { _, direct, _, _ in direct },
+        updateLanguages: { _, _ in },
         reset: {}
     )
 
     static let previewValue = TranslationClient(
         translate: { _ in "Preview Translation" },
-        translateWithLLM: { _, _ in "Preview LLM Translation" },
+        translateWithLLM: { _, _, _, _ in "Preview LLM Translation" },
+        updateLanguages: { _, _ in },
         reset: {}
     )
 }

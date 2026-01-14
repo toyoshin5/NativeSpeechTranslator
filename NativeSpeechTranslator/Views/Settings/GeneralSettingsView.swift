@@ -1,8 +1,12 @@
 import SwiftUI
 import Translation
 import FoundationModels
+import Dependencies
 
 struct GeneralSettingsView: View {
+    @AppStorage("sourceLanguage") private var sourceLanguage: String = "en-US"
+    @AppStorage("targetLanguage") private var targetLanguage: String = "ja-JP"
+    
     @AppStorage("llmTranslationEnabled") private var llmTranslationEnabled: Bool = false
     @AppStorage("llmProvider") private var llmProviderString: String = "foundation"
     @AppStorage("llmModel") private var llmModel: String = "default"
@@ -43,10 +47,54 @@ struct GeneralSettingsView: View {
     private var isFoundationModelsAvailable: Bool {
         SystemLanguageModel.default.isAvailable
     }
+    
+    @Dependency(\.translationClient) var translationClient
 
     var body: some View {
         Form {
+            Section("言語設定") {
+                Picker("入力言語 (Source)", selection: $sourceLanguage) {
+                    ForEach(SupportedLanguage.allCases) { lang in
+                        Text(lang.displayName).tag(lang.rawValue)
+                    }
+                }
+                .onChange(of: sourceLanguage) { _, newValue in
+                    if newValue == targetLanguage {
+                        // If source becomes same as target, try to switch target to something else (e.g. English or Japanese)
+                        if newValue == "en-US" { targetLanguage = "ja-JP" }
+                        else { targetLanguage = "en-US" }
+                    }
+                    
+                    Task {
+                        await translationClient.updateLanguages(
+                            Locale(identifier: sourceLanguage),
+                            Locale(identifier: targetLanguage)
+                        )
+                    }
+                }
+
+                Picker("出力言語 (Target)", selection: $targetLanguage) {
+                    ForEach(SupportedLanguage.allCases) { lang in
+                        Text(lang.displayName).tag(lang.rawValue)
+                    }
+                }
+                .onChange(of: targetLanguage) { _, newValue in
+                    if newValue == sourceLanguage {
+                        if newValue == "en-US" { sourceLanguage = "ja-JP" }
+                        else { sourceLanguage = "en-US" }
+                    }
+                    
+                    Task {
+                        await translationClient.updateLanguages(
+                            Locale(identifier: sourceLanguage),
+                            Locale(identifier: targetLanguage)
+                        )
+                    }
+                }
+            }
+
             AppleTranslationSettingsView()
+            
             Section("LLM翻訳") {
                 Toggle("LLM翻訳を有効化", isOn: $llmTranslationEnabled)
 
@@ -133,7 +181,7 @@ struct GeneralSettingsView: View {
         isTestingConnection = true
         connectionTestResult = nil
 
-        Task {
+        Task {         
             let result = await TranslationLLMService.testConnection(
                 provider: llmProvider,
                 model: llmModel,
@@ -156,6 +204,34 @@ struct GeneralSettingsView: View {
 enum ConnectionTestResult {
     case success
     case failure(String)
+}
+
+enum SupportedLanguage: String, CaseIterable, Identifiable {
+    case english = "en-US"
+    case spanish = "es-ES"
+    case french = "fr-FR"
+    case german = "de-DE"
+    case japanese = "ja-JP"
+    case korean = "ko-KR"
+    case chinese = "zh-CN"
+    case italian = "it-IT"
+    case portuguese = "pt-PT"
+
+    var id: String { rawValue }
+    
+    var displayName: String {
+        switch self {
+        case .english: return "English"
+        case .spanish: return "Spanish"
+        case .french: return "French"
+        case .german: return "German"
+        case .japanese: return "Japanese"
+        case .korean: return "Korean"
+        case .chinese: return "Chinese"
+        case .italian: return "Italian"
+        case .portuguese: return "Portuguese"
+        }
+    }
 }
 
 #Preview {

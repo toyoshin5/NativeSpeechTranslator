@@ -8,7 +8,7 @@ actor TranslationLLMService {
 
     private init() {}
 
-    func translate(original: String, direct: String) async -> String {
+    func translate(original: String, direct: String, sourceLanguage: String, targetLanguage: String) async -> String {
         let providerString = UserDefaults.standard.string(forKey: "llmProvider") ?? "foundation"
         let provider = LLMProvider(rawValue: providerString) ?? .foundation
         let model = UserDefaults.standard.string(forKey: "llmModel") ?? provider.availableModels.first ?? ""
@@ -19,6 +19,8 @@ actor TranslationLLMService {
                 return await OpenAICompatibleService.translate(
                     original: original,
                     direct: direct,
+                    sourceLanguage: sourceLanguage,
+                    targetLanguage: targetLanguage,
                     model: model,
                     apiKey: UserDefaults.standard.string(forKey: "openaiAPIKey") ?? "",
                     baseURL: "https://api.openai.com/v1/chat/completions"
@@ -27,6 +29,8 @@ actor TranslationLLMService {
                 return await OpenAICompatibleService.translate(
                     original: original,
                     direct: direct,
+                    sourceLanguage: sourceLanguage,
+                    targetLanguage: targetLanguage,
                     model: model,
                     apiKey: UserDefaults.standard.string(forKey: "groqAPIKey") ?? "",
                     baseURL: "https://api.groq.com/openai/v1/chat/completions"
@@ -35,12 +39,19 @@ actor TranslationLLMService {
                 return await OpenAICompatibleService.translate(
                     original: original,
                     direct: direct,
+                    sourceLanguage: sourceLanguage,
+                    targetLanguage: targetLanguage,
                     model: model,
                     apiKey: UserDefaults.standard.string(forKey: "cerebrasAPIKey") ?? "",
                     baseURL: "https://api.cerebras.ai/v1/chat/completions"
                 )
             case .foundation:
-                return await FoundationModelService.shared.refine(original: original, direct: direct)
+                return await FoundationModelService.shared.refine(
+                    original: original,
+                    direct: direct,
+                    sourceLanguage: sourceLanguage,
+                    targetLanguage: targetLanguage
+                )
             }
         }
 

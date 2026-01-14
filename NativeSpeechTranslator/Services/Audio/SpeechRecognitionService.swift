@@ -22,27 +22,27 @@ actor SpeechRecognitionService {
     ///
     /// - Parameter audioStream: 音声バッファの非同期ストリーム。
     /// - Returns: 認識結果の非同期ストリーム。
-    func startRecognition(audioStream: AsyncStream<(AVAudioPCMBuffer, AVAudioTime)>) -> AsyncStream<
+    func startRecognition(audioStream: AsyncStream<(AVAudioPCMBuffer, AVAudioTime)>, locale: Locale) -> AsyncStream<
         TranscriptionResult
     > {
         AsyncStream { continuation in
             analysisTask = Task {
                 do {
                     guard
-                        let locale = await SpeechTranscriber.supportedLocale(
-                            equivalentTo: Locale.current)
+                        let supportedLocale = await SpeechTranscriber.supportedLocale(
+                            equivalentTo: locale)
                     else {
-                        print("Supported locale not found")
+                        print("Supported locale not found for \(locale)")
                         continuation.finish()
                         return
                     }
 
-                    try await AssetInventory.reserve(locale: locale)
+                    try await AssetInventory.reserve(locale: supportedLocale)
 
                     let preset: SpeechTranscriber.Preset = .progressiveTranscription
 
                     let transcriber = SpeechTranscriber(
-                        locale: locale,
+                        locale: supportedLocale,
                         preset: preset
                     )
 
@@ -56,7 +56,7 @@ actor SpeechRecognitionService {
                     try await analyzer.prepareToAnalyze(
                         in: self.bestAvailableAudioFormat, withProgressReadyHandler: nil)
 
-                    let installed = (await SpeechTranscriber.installedLocales).contains(locale)
+                    let installed = (await SpeechTranscriber.installedLocales).contains(supportedLocale)
                     if !installed {
                         if let installationRequest =
                             try await AssetInventory.assetInstallationRequest(
@@ -113,7 +113,7 @@ actor SpeechRecognitionService {
                     continuation.finish()
 
                     try await analyzer.finalize(through: nil)
-                    await AssetInventory.release(reservedLocale: locale)
+                    await AssetInventory.release(reservedLocale: supportedLocale)
 
                 } catch {
                     print("Speech recognition setup error: \(error)")

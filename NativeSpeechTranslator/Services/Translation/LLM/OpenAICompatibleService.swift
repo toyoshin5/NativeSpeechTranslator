@@ -23,14 +23,14 @@ enum OpenAICompatibleService {
         }
     }
 
-    static func translate(original: String, direct: String, model: String, apiKey: String, baseURL: String) async -> String {
+    static func translate(original: String, direct: String, sourceLanguage: String, targetLanguage: String, model: String, apiKey: String, baseURL: String) async -> String {
         guard !apiKey.isEmpty else { return direct }
         guard let url = URL(string: baseURL) else { return direct }
 
         let request = Request(
             model: model,
             messages: [
-                Request.Message(role: "system", content: TranslationPrompt.systemPrompt),
+                Request.Message(role: "system", content: TranslationPrompt.systemPrompt(sourceLanguage: sourceLanguage, targetLanguage: targetLanguage)),
                 Request.Message(role: "user", content: TranslationPrompt.userPrompt(original: original, direct: direct))
             ],
         )

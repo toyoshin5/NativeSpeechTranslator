@@ -17,19 +17,38 @@ class TranslationService: ObservableObject {
     private var requestContinuation: AsyncStream<Request>.Continuation?
     private var requestStream: AsyncStream<Request>?
 
-    private let source = Locale.Language(identifier: "en")
-    private let target = Locale.Language(identifier: "ja")
+    private var source: Locale.Language
+    private var target: Locale.Language
 
     private init() {
+        let sourceID = UserDefaults.standard.string(forKey: "sourceLanguage") ?? "en-US"
+        let targetID = UserDefaults.standard.string(forKey: "targetLanguage") ?? "ja-JP"
+        self.source = Locale.Language(identifier: sourceID)
+        self.target = Locale.Language(identifier: targetID)
+        
         let (stream, continuation) = AsyncStream<Request>.makeStream()
         self.requestStream = stream
         self.requestContinuation = continuation
+        // Initialization without configuration to allow delayed setup or default
         self.configuration = TranslationSession.Configuration(source: source, target: target)
+    }
+
+    func setLanguages(source: Locale, target: Locale) {
+        let newSource = Locale.Language(identifier: source.identifier)
+        let newTarget = Locale.Language(identifier: target.identifier)
+        
+        guard self.source != newSource || self.target != newTarget else { return }
+        
+        self.source = newSource
+        self.target = newTarget
+        
+        // Update configuration to trigger new session
+        self.configuration = TranslationSession.Configuration(source: newSource, target: newTarget)
     }
 
     func translate(_ text: String) async throws -> String {
         if configuration == nil {
-            configuration = TranslationSession.Configuration(source: source, target: target)
+             configuration = TranslationSession.Configuration(source: source, target: target)
         }
 
         return try await withCheckedThrowingContinuation { continuation in
