@@ -104,16 +104,12 @@ struct HomeView: View {
             Divider()
 
             HStack {
-                Button(action: {
+                RecordingButton(isRecording: viewModel.isRecording) {
                     if viewModel.isRecording {
                         viewModel.stopRecording()
                     } else {
                         viewModel.startRecording()
                     }
-                }) {
-                    Image(systemName: viewModel.isRecording ? "stop.fill" : "mic.fill")
-                        .font(.title2)
-                        .padding()
                 }
                 .keyboardShortcut(.space, modifiers: [])
 
