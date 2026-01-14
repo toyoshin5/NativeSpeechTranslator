@@ -88,13 +88,17 @@ struct HomeView: View {
                 Button(action: {
                     isAutoScrollEnabled.toggle()
                 }) {
-                    Image(systemName: isAutoScrollEnabled ? "arrow.down.to.line.circle.fill" : "arrow.down.to.line.circle")
-                        .foregroundStyle(isAutoScrollEnabled ? .blue : .secondary)
-                        .font(.largeTitle)
+                    Image(systemName: "arrow.down.to.line")
+                        .font(.title)
                 }
                 .buttonStyle(.plain)
+                .frame(width: 44, height: 44)
+                .glassEffect(.clear.interactive())
+                .foregroundStyle(isAutoScrollEnabled ? .blue : .secondary)
                 .padding()
+
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomTrailing)
+
             }
 
             Divider()
@@ -156,4 +160,8 @@ struct HomeView: View {
         formatter.dateFormat = "yyyyMMdd_HHmmss"
         return formatter.string(from: Date())
     }
+}
+
+#Preview {
+    HomeView()
 }
