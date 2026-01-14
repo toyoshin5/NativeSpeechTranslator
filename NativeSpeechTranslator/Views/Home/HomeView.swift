@@ -59,14 +59,6 @@ struct HomeView: View {
                 .padding(.leading, 16)
 
                 Spacer()
-
-                if viewModel.isRecording {
-                    Label("聞き取り中", systemImage: "recordingtape")
-                        .foregroundColor(.red)
-                } else {
-                    Label("停止中", systemImage: "stop.fill")
-                        .foregroundColor(.gray)
-                }
             }
             .padding()
             .background(Color(NSColor.windowBackgroundColor))
