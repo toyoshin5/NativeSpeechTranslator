@@ -76,6 +76,11 @@ class TranslationService: ObservableObject {
         }
     }
 
+    func isTranslationModelInstalled(source: Locale.Language, target: Locale.Language) async -> Bool {
+        let status = await LanguageAvailability().status(from: source, to: target)
+        return status == .installed
+    }
+
     func handleSession(_ session: TranslationSession) async {
         guard let stream = requestStream else { return }
 

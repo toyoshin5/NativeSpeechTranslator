@@ -28,6 +28,8 @@ class HomeViewModel: ObservableObject {
             applyDeviceChange()
         }
     }
+    
+    @Published var isTranslationModelInstalled: Bool = false
 
     private var sourceLanguageIdentifier: String {
         UserDefaults.standard.string(forKey: "sourceLanguage") ?? "en-US"
@@ -57,6 +59,7 @@ class HomeViewModel: ObservableObject {
             self.selectedDeviceID = defaultDevice.uniqueID
         }
         startStandaloneLevelMonitoring()
+        Task { await checkTranslationModelStatus() }
     }
 
     private func applyDeviceChange() {
@@ -154,8 +157,21 @@ class HomeViewModel: ObservableObject {
     }
 
     func handleSourceLanguageChange() {
+        Task { await checkTranslationModelStatus() }
         if isRecording {
             restartRecording()
+        }
+    }
+    
+    func handleTargetLanguageChange() {
+        Task { await checkTranslationModelStatus() }
+    }
+    
+    func checkTranslationModelStatus() async {
+        isTranslationModelInstalled = await translationClient.isTranslationModelInstalled(sourceLocale.language, targetLocale.language)
+        
+        if !isTranslationModelInstalled && isRecording {
+            stopRecording()
         }
     }
     

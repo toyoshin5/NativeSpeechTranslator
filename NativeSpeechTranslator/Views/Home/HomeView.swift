@@ -115,6 +115,23 @@ struct HomeView: View {
 
             Divider()
 
+            VStack(spacing: 8) {
+                if !viewModel.isTranslationModelInstalled {
+                    HStack {
+                        Image(systemName: "exclamationmark.triangle.fill")
+                            .foregroundStyle(.yellow)
+                        Text("翻訳モデルがインストールされていません")
+                            .foregroundStyle(.secondary)                    
+                        SettingsLink {
+                            Text("設定を開く")
+                        }
+                        .buttonStyle(.link)
+                    }
+                    .padding(.top, 8)
+                }
+                
+            }
+
             HStack {
                 RecordingButton(isRecording: viewModel.isRecording) {
                     if viewModel.isRecording {
@@ -124,6 +141,8 @@ struct HomeView: View {
                     }
                 }
                 .keyboardShortcut(.space, modifiers: [])
+                .disabled(!viewModel.isTranslationModelInstalled)
+                .opacity(viewModel.isTranslationModelInstalled ? 1.0 : 0.5)
 
                 Spacer()
 
@@ -163,6 +182,9 @@ struct HomeView: View {
         }
         .onChange(of: sourceLanguage) { _, _ in
             viewModel.handleSourceLanguageChange()
+        }
+        .onChange(of: targetLanguage) { _, _ in
+            viewModel.handleTargetLanguageChange()
         }
     }
 

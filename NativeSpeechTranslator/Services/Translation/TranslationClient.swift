@@ -6,6 +6,7 @@ struct TranslationClient {
     var translateWithLLM: @Sendable (String, String, String, String) async -> String
     var refreshLanguages: @Sendable () async -> Void
     var reset: @Sendable () async -> Void
+    var isTranslationModelInstalled: @Sendable (Locale.Language, Locale.Language) async -> Bool
 }
 
 extension DependencyValues {
@@ -39,6 +40,9 @@ extension TranslationClient: DependencyKey {
         reset: {
             await TranslationService.shared.reset()
             await FoundationModelService.shared.reset()
+        },
+        isTranslationModelInstalled: { source, target in
+            await TranslationService.shared.isTranslationModelInstalled(source: source, target: target)
         }
     )
 
@@ -46,13 +50,15 @@ extension TranslationClient: DependencyKey {
         translate: { _ in "Test Translation" },
         translateWithLLM: { _, direct, _, _ in direct },
         refreshLanguages: {},
-        reset: {}
+        reset: {},
+        isTranslationModelInstalled: { _, _ in true }
     )
 
     static let previewValue = TranslationClient(
         translate: { _ in "Preview Translation" },
         translateWithLLM: { _, _, _, _ in "Preview LLM Translation" },
         refreshLanguages: {},
-        reset: {}
+        reset: {},
+        isTranslationModelInstalled: { _, _ in true }
     )
 }
