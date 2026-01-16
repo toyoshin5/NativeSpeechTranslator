@@ -1,6 +1,7 @@
 name: NativeSpeechTranslator
 options:
   bundleIdPrefix: com.example
+  developmentLanguage: ja
 packages:
   SwiftDependencies:
     url: https://github.com/pointfreeco/swift-dependencies

@@ -18,7 +18,7 @@ struct AppleTranslationSettingsView: View {
     }
 
     var body: some View {
-        Section("翻訳モデル (\(sourceLanguageIdentifier) → \(targetLanguageIdentifier))") {
+        Section("翻訳モデル (\(getDisplayLanguageName(for: sourceLanguageIdentifier)) → \(getDisplayLanguageName(for: targetLanguageIdentifier)))") {
             HStack {
                 if let status = status {
                     switch status {
@@ -80,5 +80,12 @@ struct AppleTranslationSettingsView: View {
         let availability = LanguageAvailability()
         let status = await availability.status(from: sourceLanguage, to: targetLanguage)
         self.status = status
+    }
+    
+    private func getDisplayLanguageName(for identifier: String) -> String {
+        if let lang = SupportedLanguage(rawValue: identifier){
+            return lang.displayName
+        }
+        return identifier
     }
 }

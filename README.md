@@ -5,8 +5,6 @@
 
 macOS Tahoe以降で動作するオフラインのリアルタイム音声認識 & 翻訳ツール
 
-今は日本語→英語のみ
-
 ## 概要
 
 マイク音声をリアルタイムでキャプチャし、オンデバイスで以下の処理を行います
@@ -15,6 +13,20 @@ LadioCast，BlackHole等を活用することで、zoom通話などから音声�
 
 1. `SpeechAnalyzer` による文字起こし
 2. `Translation`と`FoundationModels` による日本語翻訳
+
+## 対応翻訳言語
+
+以下の言語に対応しています
+
+- 日本語 (ja-JP)
+- 英語 (en-US)
+- スペイン語 (es-ES)
+- フランス語 (fr-FR)
+- ドイツ語 (de-DE)
+- 韓国語 (ko-KR)
+- 中国語 (zh-CN)
+- イタリア語 (it-IT)
+- ポルトガル語 (pt-PT)
 
 ## 動作要件
 
@@ -39,3 +51,7 @@ xcodegen generate
 ```bash
 xcodebuild -scheme NativeSpeechTranslator -destination 'platform=macOS' build
 ```
+
+## 対応翻訳言語
+
+- 

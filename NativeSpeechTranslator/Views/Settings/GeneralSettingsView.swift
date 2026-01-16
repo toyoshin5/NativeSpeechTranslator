@@ -197,34 +197,6 @@ enum ConnectionTestResult {
     case failure(String)
 }
 
-enum SupportedLanguage: String, CaseIterable, Identifiable {
-    case english = "en-US"
-    case spanish = "es-ES"
-    case french = "fr-FR"
-    case german = "de-DE"
-    case japanese = "ja-JP"
-    case korean = "ko-KR"
-    case chinese = "zh-CN"
-    case italian = "it-IT"
-    case portuguese = "pt-PT"
-
-    var id: String { rawValue }
-    
-    var displayName: String {
-        switch self {
-        case .english: return "English"
-        case .spanish: return "Spanish"
-        case .french: return "French"
-        case .german: return "German"
-        case .japanese: return "Japanese"
-        case .korean: return "Korean"
-        case .chinese: return "Chinese"
-        case .italian: return "Italian"
-        case .portuguese: return "Portuguese"
-        }
-    }
-}
-
 #Preview {
     GeneralSettingsView()
 }

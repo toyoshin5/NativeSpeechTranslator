@@ -158,6 +158,14 @@ class HomeViewModel: ObservableObject {
             restartRecording()
         }
     }
+    
+    func getDisplayLanguageName(for identifier: String) -> String {
+        if let lang = SupportedLanguage(rawValue: identifier){
+            return lang.displayName
+        }
+        return identifier
+    }
+        
 
     private func restartRecording() {
         Task {

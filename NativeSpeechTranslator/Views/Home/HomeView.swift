@@ -34,6 +34,8 @@ struct HomeView: View {
     @AppStorage("isAutoScrollEnabled") private var isAutoScrollEnabled: Bool = true
 
     @AppStorage("sourceLanguage") private var sourceLanguage: String = "en-US"
+    @AppStorage("targetLanguage") private var targetLanguage: String = "ja-JP"
+    
 
     var body: some View {
         VStack(spacing: 0) {
@@ -65,6 +67,22 @@ struct HomeView: View {
             .padding()
             .background(Color(NSColor.windowBackgroundColor))
 
+            Divider()
+
+            HStack(spacing: 0) {
+                Text(viewModel.getDisplayLanguageName(for: sourceLanguage))
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.leading, 16)
+                    .bold()
+                Divider()
+                Text(viewModel.getDisplayLanguageName(for: targetLanguage))
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.leading, 16)
+                    .bold()
+            }
+            .frame(height: 32)
+            .background(Color(NSColor.windowBackgroundColor))
+            
             Divider()
 
             AutoScrollView(items: viewModel.transcripts, isAutoScrollEnabled: isAutoScrollEnabled) { item in
