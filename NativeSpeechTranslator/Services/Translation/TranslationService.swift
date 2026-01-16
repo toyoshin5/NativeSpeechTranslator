@@ -33,18 +33,6 @@ class TranslationService: ObservableObject {
         self.configuration = TranslationSession.Configuration(source: source, target: target)
     }
 
-    func setLanguages(source: Locale, target: Locale) {
-        let newSource = Locale.Language(identifier: source.identifier)
-        let newTarget = Locale.Language(identifier: target.identifier)
-        
-        guard self.source != newSource || self.target != newTarget else { return }
-        
-        self.source = newSource
-        self.target = newTarget
-        
-        // Update configuration to trigger new session
-        self.configuration = TranslationSession.Configuration(source: newSource, target: newTarget)
-    }
 
     func translate(_ text: String) async throws -> String {
         if configuration == nil {
@@ -58,7 +46,15 @@ class TranslationService: ObservableObject {
     }
 
     func reset() {
-        requestContinuation?.finish()
+        self.requestContinuation?.finish()
+        self.requestStream?.map { stream in
+            Task {
+                for await request in stream {
+                    request.continuation.resume(throwing: CancellationError())
+                }
+            }
+        }
+
         requestContinuation = nil
         requestStream = nil
         configuration = nil
@@ -66,6 +62,11 @@ class TranslationService: ObservableObject {
         let (stream, continuation) = AsyncStream<Request>.makeStream()
         self.requestStream = stream
         self.requestContinuation = continuation
+
+        let sourceID = UserDefaults.standard.string(forKey: "sourceLanguage") ?? "en-US"
+        let targetID = UserDefaults.standard.string(forKey: "targetLanguage") ?? "ja-JP"
+        self.source = Locale.Language(identifier: sourceID)
+        self.target = Locale.Language(identifier: targetID)
 
         sessionId += 1
 

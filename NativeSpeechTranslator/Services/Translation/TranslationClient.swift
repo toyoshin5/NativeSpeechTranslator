@@ -4,7 +4,7 @@ import Foundation
 struct TranslationClient {
     var translate: @Sendable (String) async -> String
     var translateWithLLM: @Sendable (String, String, String, String) async -> String
-    var updateLanguages: @Sendable (Locale, Locale) async -> Void
+    var refreshLanguages: @Sendable () async -> Void
     var reset: @Sendable () async -> Void
 }
 
@@ -33,8 +33,8 @@ extension TranslationClient: DependencyKey {
                 targetLanguage: targetLanguage
             )
         },
-        updateLanguages: { source, target in
-            await TranslationService.shared.setLanguages(source: source, target: target)
+        refreshLanguages: {
+            await TranslationService.shared.reset()
         },
         reset: {
             await TranslationService.shared.reset()
@@ -45,14 +45,14 @@ extension TranslationClient: DependencyKey {
     static let testValue = TranslationClient(
         translate: { _ in "Test Translation" },
         translateWithLLM: { _, direct, _, _ in direct },
-        updateLanguages: { _, _ in },
+        refreshLanguages: {},
         reset: {}
     )
 
     static let previewValue = TranslationClient(
         translate: { _ in "Preview Translation" },
         translateWithLLM: { _, _, _, _ in "Preview LLM Translation" },
-        updateLanguages: { _, _ in },
+        refreshLanguages: {},
         reset: {}
     )
 }

@@ -66,10 +66,7 @@ struct GeneralSettingsView: View {
                     }
                     
                     Task {
-                        await translationClient.updateLanguages(
-                            Locale(identifier: sourceLanguage),
-                            Locale(identifier: targetLanguage)
-                        )
+                        await translationClient.refreshLanguages()
                     }
                 }
 
@@ -85,10 +82,7 @@ struct GeneralSettingsView: View {
                     }
                     
                     Task {
-                        await translationClient.updateLanguages(
-                            Locale(identifier: sourceLanguage),
-                            Locale(identifier: targetLanguage)
-                        )
+                        await translationClient.refreshLanguages()
                     }
                 }
             }
