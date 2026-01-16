@@ -22,7 +22,7 @@ enum LLMProvider: String, CaseIterable, Identifiable {
         case .openai: return ["gpt-5-mini","gpt-5-nano"]
         case .groq: return ["llama-3.3-70b-versatile", "openai/gpt-oss-120b"]
         case .cerebras: return ["llama-3.3-70b", "gpt-oss-120b", "qwen-3-32b"]
-        case .foundation: return ["default"]
+        case .foundation: return []
         }
     }
 

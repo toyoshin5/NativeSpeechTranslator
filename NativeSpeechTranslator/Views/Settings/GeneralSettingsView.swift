@@ -99,15 +99,16 @@ struct GeneralSettingsView: View {
                         .labelsHidden()
                         .fixedSize()
                     }
-
-                    LabeledContent("モデル") {
-                        Picker("", selection: $llmModel) {
-                            ForEach(llmProvider.availableModels, id: \.self) { model in
-                                Text(model).tag(model)
+                    if !llmProvider.availableModels.isEmpty {
+                        LabeledContent("モデル") {
+                            Picker("", selection: $llmModel) {
+                                ForEach(llmProvider.availableModels, id: \.self) { model in
+                                    Text(model).tag(model)
+                                }
                             }
+                            .labelsHidden()
+                            .fixedSize()
                         }
-                        .labelsHidden()
-                        .fixedSize()
                     }
 
                     if llmProvider == .foundation {
