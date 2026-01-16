@@ -110,10 +110,30 @@ struct GeneralSettingsView: View {
                         .fixedSize()
                     }
 
-                    if llmProvider == .foundation && !isFoundationModelsAvailable {
-                        Text("このデバイスではApple Intelligenceが利用できません")
-                            .font(.caption)
-                            .foregroundStyle(.red)
+                    if llmProvider == .foundation {
+                        switch SystemLanguageModel.default.availability {
+                        case .available:
+                            EmptyView()
+                        case .unavailable(let reason):
+                            let message: String = {
+                                switch reason {
+                                case .deviceNotEligible:
+                                    return "このデバイスはApple Intelligenceに対応していません"
+                                case .appleIntelligenceNotEnabled:
+                                    return "Apple Intelligenceが本体設定で有効になっていません"
+                                case .modelNotReady:
+                                    return "Apple Intelligenceのモデルを準備中です"
+                                @unknown default:
+                                    return "Apple Intelligenceが利用できません"
+                                }
+                            }()
+                            
+                            Text(message)
+                                .font(.caption)
+                                .foregroundStyle(.red)
+                        @unknown default:
+                            EmptyView()
+                        }
                     }
                 }
             }
