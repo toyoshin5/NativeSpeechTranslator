@@ -47,7 +47,7 @@ class TranslationService: ObservableObject {
 
     func reset() {
         self.requestContinuation?.finish()
-        self.requestStream?.map { stream in
+        if let stream = self.requestStream {
             Task {
                 for await request in stream {
                     request.continuation.resume(throwing: CancellationError())

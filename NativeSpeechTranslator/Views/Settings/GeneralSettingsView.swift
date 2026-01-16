@@ -53,16 +53,14 @@ struct GeneralSettingsView: View {
     var body: some View {
         Form {
             Section("言語設定") {
-                Picker("入力言語 (Source)", selection: $sourceLanguage) {
+                Picker("入力言語", selection: $sourceLanguage) {
                     ForEach(SupportedLanguage.allCases) { lang in
                         Text(lang.displayName).tag(lang.rawValue)
                     }
                 }
-                .onChange(of: sourceLanguage) { _, newValue in
+                .onChange(of: sourceLanguage) { oldValue, newValue in
                     if newValue == targetLanguage {
-                        // If source becomes same as target, try to switch target to something else (e.g. English or Japanese)
-                        if newValue == "en-US" { targetLanguage = "ja-JP" }
-                        else { targetLanguage = "en-US" }
+                        targetLanguage = oldValue
                     }
                     
                     Task {
@@ -70,15 +68,14 @@ struct GeneralSettingsView: View {
                     }
                 }
 
-                Picker("出力言語 (Target)", selection: $targetLanguage) {
+                Picker("出力言語", selection: $targetLanguage) {
                     ForEach(SupportedLanguage.allCases) { lang in
                         Text(lang.displayName).tag(lang.rawValue)
                     }
                 }
-                .onChange(of: targetLanguage) { _, newValue in
+                .onChange(of: targetLanguage) { oldValue, newValue in
                     if newValue == sourceLanguage {
-                        if newValue == "en-US" { sourceLanguage = "ja-JP" }
-                        else { sourceLanguage = "en-US" }
+                        sourceLanguage = oldValue
                     }
                     
                     Task {
