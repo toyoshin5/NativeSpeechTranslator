@@ -47,14 +47,14 @@ class HomeViewModel: ObservableObject {
         Locale(identifier: targetLanguageIdentifier)
     }
 
-    private let audioService = AudioCaptureService.shared
+    @Dependency(\.audioCaptureClient) var audioCaptureClient
     @Dependency(\.speechRecognitionClient) var speechRecognitionClient
     @Dependency(\.translationClient) var translationClient
 
     private var levelMonitoringTask: Task<Void, Never>?
 
     init() {
-        self.inputDevices = audioService.getAvailableDevices()
+        self.inputDevices = audioCaptureClient.getAvailableDevices()
         if let defaultDevice = inputDevices.first {
             self.selectedDeviceID = defaultDevice.uniqueID
         }
@@ -64,7 +64,7 @@ class HomeViewModel: ObservableObject {
 
     private func applyDeviceChange() {
         Task {
-            await audioService.setInputDevice(deviceID: selectedDeviceID)
+            await audioCaptureClient.setInputDevice(selectedDeviceID)
 
             if isRecording {
                 restartRecording()
@@ -73,12 +73,12 @@ class HomeViewModel: ObservableObject {
             }
         }
     }
-    // ... existing monitoring methods ...
+
 
     private func startStandaloneLevelMonitoring() {
         levelMonitoringTask?.cancel()
         levelMonitoringTask = Task {
-            let levelStream = await audioService.startLevelMonitoringOnly()
+            let levelStream = await audioCaptureClient.startLevelMonitoringOnly()
             for await level in levelStream {
                 guard !Task.isCancelled else { break }
                 self.audioLevel = level
@@ -90,7 +90,7 @@ class HomeViewModel: ObservableObject {
         levelMonitoringTask?.cancel()
         levelMonitoringTask = nil
         Task {
-            await audioService.stopLevelMonitoringOnly()
+            await audioCaptureClient.stopLevelMonitoringOnly()
         }
     }
 
@@ -110,14 +110,14 @@ class HomeViewModel: ObservableObject {
 
         Task {
             do {
-                let audioStream = try await audioService.startStream()
+                let audioStream = try await audioCaptureClient.startStream()
 
                 let transcriptionStream = await speechRecognitionClient.startRecognition(
                     audioStream,
                     sourceLocale
                 )
 
-                let levelStream = await audioService.startLevelMonitoring()
+                let levelStream = await audioCaptureClient.startLevelMonitoring()
 
                 Task {
                     for await result in transcriptionStream {
@@ -142,7 +142,7 @@ class HomeViewModel: ObservableObject {
     func stopRecording() {
         guard isRecording else { return }
         Task {
-            await audioService.stopStream()
+            await audioCaptureClient.stopStream()
             await speechRecognitionClient.stopRecognition()
             isRecording = false
             startStandaloneLevelMonitoring()
@@ -185,20 +185,20 @@ class HomeViewModel: ObservableObject {
 
     private func restartRecording() {
         Task {
-            await audioService.stopStream()
+            await audioCaptureClient.stopStream()
             await speechRecognitionClient.stopRecognition()
 
             try? await Task.sleep(nanoseconds: 300_000_000)
 
             do {
-                let audioStream = try await audioService.startStream()
+                let audioStream = try await audioCaptureClient.startStream()
 
                 let transcriptionStream = await speechRecognitionClient.startRecognition(
                     audioStream,
                     sourceLocale
                 )
 
-                let levelStream = await audioService.startLevelMonitoring()
+                let levelStream = await audioCaptureClient.startLevelMonitoring()
 
                 Task {
                     for await result in transcriptionStream {
@@ -221,7 +221,6 @@ class HomeViewModel: ObservableObject {
     }
 
     private func handleRecognitionResult(_ result: TranscriptionResult) {
-        let shouldTranslate = true
 
         var targetIndex: Int?
 
@@ -237,14 +236,14 @@ class HomeViewModel: ObservableObject {
             let newItem = TranscriptItem(
                 original: result.text,
                 translation: nil,
-                isShowLoading: shouldTranslate,
+                isShowLoading: true,
                 isFinal: result.isFinal
             )
             transcripts.append(newItem)
             targetIndex = transcripts.indices.last
         }
 
-        if shouldTranslate, let index = targetIndex {
+        if let index = targetIndex {
             translate(text: result.text, at: index, isFinal: result.isFinal)
         }
     }
