@@ -48,7 +48,7 @@ class HomeViewModel: ObservableObject {
     }
 
     private let audioService = AudioCaptureService.shared
-    private let recognitionService = SpeechRecognitionService.shared
+    @Dependency(\.speechRecognitionClient) var speechRecognitionClient
     @Dependency(\.translationClient) var translationClient
 
     private var levelMonitoringTask: Task<Void, Never>?
@@ -112,9 +112,9 @@ class HomeViewModel: ObservableObject {
             do {
                 let audioStream = try await audioService.startStream()
 
-                let transcriptionStream = await recognitionService.startRecognition(
-                    audioStream: audioStream,
-                    locale: sourceLocale
+                let transcriptionStream = await speechRecognitionClient.startRecognition(
+                    audioStream,
+                    sourceLocale
                 )
 
                 let levelStream = await audioService.startLevelMonitoring()
@@ -143,7 +143,7 @@ class HomeViewModel: ObservableObject {
         guard isRecording else { return }
         Task {
             await audioService.stopStream()
-            await recognitionService.stopRecognition()
+            await speechRecognitionClient.stopRecognition()
             isRecording = false
             startStandaloneLevelMonitoring()
         }
@@ -186,16 +186,16 @@ class HomeViewModel: ObservableObject {
     private func restartRecording() {
         Task {
             await audioService.stopStream()
-            await recognitionService.stopRecognition()
+            await speechRecognitionClient.stopRecognition()
 
             try? await Task.sleep(nanoseconds: 300_000_000)
 
             do {
                 let audioStream = try await audioService.startStream()
 
-                let transcriptionStream = await recognitionService.startRecognition(
-                    audioStream: audioStream,
-                    locale: sourceLocale
+                let transcriptionStream = await speechRecognitionClient.startRecognition(
+                    audioStream,
+                    sourceLocale
                 )
 
                 let levelStream = await audioService.startLevelMonitoring()
