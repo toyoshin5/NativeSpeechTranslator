@@ -41,3 +41,18 @@ schemes:
       config: Debug
     archive:
       config: Release
+  Release:
+    build:
+      targets:
+        NativeSpeechTranslator: all
+    run:
+      config: Release
+    test:
+      config: Release
+    profile:
+      config: Release
+    analyze:
+      config: Release
+    archive:
+      config: Release
+
