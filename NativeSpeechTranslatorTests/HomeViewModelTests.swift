@@ -9,7 +9,7 @@ import Testing
 struct HomeViewModelTests {
 
     @Test("初期状態の確認")
-    func 初期状態_確認() async {
+    func testInitialState() async {
         // Given
         let model = withDependencies {
             $0.audioCaptureClient = .testValue
@@ -26,7 +26,7 @@ struct HomeViewModelTests {
     }
 
     @Test("録音開始と停止が正しく機能する")
-    func 録音開始_停止_正常系() async {
+    func testRecordingStartStop() async {
         // Given
         let model = withDependencies {
             $0.audioCaptureClient = .testValue
@@ -50,7 +50,7 @@ struct HomeViewModelTests {
     }
 
     @Test("音声認識結果が正しく反映される")
-    func 音声認識結果_反映() async {
+    func testSpeechRecognitionResultReflected() async {
         // Given
         let transcriptionText = "こんにちは"
         let model = withDependencies {
@@ -79,7 +79,7 @@ struct HomeViewModelTests {
     }
 
     @Test("エラーハンドリング（録音開始失敗）")
-    func 録音開始失敗_処理() async {
+    func testRecordingStartFailureHandling() async {
         // Given
         let model = withDependencies {
             $0.audioCaptureClient.startStream = { throw NSError(domain: "test", code: -1) }
@@ -97,7 +97,7 @@ struct HomeViewModelTests {
         #expect(!model.isRecording)
     }
     @Test("トランスクリプトのクリア")
-    func トランスクリプト_クリア() async {
+    func testClearTranscripts() async {
         // Given
         let model = withDependencies {
             $0.audioCaptureClient = .testValue
@@ -118,7 +118,7 @@ struct HomeViewModelTests {
     }
 
     @Test("ソース言語変更時の処理（録音中）")
-    func ソース言語変更_録音中() async {
+    func testSourceLanguageChangeWhileRecording() async {
         // Given
         let model = withDependencies {
             $0.audioCaptureClient = .testValue
@@ -140,7 +140,7 @@ struct HomeViewModelTests {
     }
 
     @Test("ターゲット言語変更時の処理")
-    func ターゲット言語変更() async {
+    func testTargetLanguageChange() async {
         // Given
         let model = withDependencies {
             $0.audioCaptureClient = .testValue
@@ -158,7 +158,7 @@ struct HomeViewModelTests {
     }
 
     @Test("翻訳モデル未インストール時の録音停止")
-    func モデル未インストール_録音停止() async {
+    func testStopRecordingWhenModelNotInstalled() async {
         // Given
         let model = withDependencies {
             $0.audioCaptureClient = .testValue
@@ -179,7 +179,7 @@ struct HomeViewModelTests {
     }
 
     @Test("デバイス変更時の再起動処理")
-    func デバイス変更_再起動() async {
+    func testRestartOnDeviceChange() async {
         // Given
         let devices = [
             AudioDevice(id: "device1", name: "Mic 1"),
@@ -208,7 +208,7 @@ struct HomeViewModelTests {
     }
 
     @Test("デバイス変更時のレベルモニタリング再起動（録音していない場合）")
-    func デバイス変更_レベルモニタリング再起動() async {
+    func testRestartLevelMonitoringOnDeviceChange() async {
         // Given
         let devices = [
             AudioDevice(id: "device1", name: "Mic 1"),
@@ -244,7 +244,7 @@ struct HomeViewModelTests {
     }
 
     @Test("表示言語名の取得")
-    func 表示言語名_取得() async {
+    func testDisplayLanguageNameRetrieval() async {
         // Given
         let model = withDependencies {
             $0.audioCaptureClient = .testValue
