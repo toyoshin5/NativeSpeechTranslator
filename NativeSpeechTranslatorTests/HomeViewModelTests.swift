@@ -238,8 +238,7 @@ struct HomeViewModelTests {
         // Then
         try? await Task.sleep(nanoseconds: 100_000_000)
         #expect(model.selectedDeviceID == "device2")
-        // Ideally verify startLevelMonitoringOnly caused audioLevel update
-        // Simple check:
+
         try? await Task.sleep(nanoseconds: 100_000_000)
         #expect(model.audioLevel == 0.5)
     }
