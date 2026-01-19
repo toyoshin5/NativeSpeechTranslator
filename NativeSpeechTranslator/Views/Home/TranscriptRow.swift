@@ -7,8 +7,6 @@ struct TranscriptRow: View {
 
     /// 翻訳文
     let translation: String?
-
-    let isTranslating: Bool
     
     let fontSize: CGFloat
 
@@ -30,9 +28,6 @@ struct TranscriptRow: View {
                         .textSelection(.enabled)
                         .font(.system(size: fontSize))
                         .foregroundColor(.secondary)
-                } else if isTranslating {
-                    ProgressView()
-                        .scaleEffect(0.5)
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)

@@ -10,7 +10,6 @@ class HomeViewModel: ObservableObject {
         let id = UUID()
         var original: String
         var translation: String?
-        var isShowLoading: Bool = false
         var isFinal: Bool = false
     }
 
@@ -230,13 +229,11 @@ class HomeViewModel: ObservableObject {
 
             if result.isFinal {
                 transcripts[lastIndex].isFinal = true
-                transcripts[lastIndex].isShowLoading = true
             }
         } else {
             let newItem = TranscriptItem(
                 original: result.text,
                 translation: nil,
-                isShowLoading: true,
                 isFinal: result.isFinal
             )
             transcripts.append(newItem)
@@ -254,7 +251,6 @@ class HomeViewModel: ObservableObject {
 
             if index < transcripts.count {
                 transcripts[index].translation = translation
-                transcripts[index].isShowLoading = false
 
                 if isFinal {
                     let llmEnabled = UserDefaults.standard.bool(forKey: "llmTranslationEnabled")

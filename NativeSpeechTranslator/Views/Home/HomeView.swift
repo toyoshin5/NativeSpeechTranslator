@@ -89,7 +89,6 @@ struct HomeView: View {
                 TranscriptRow(
                     original: item.original,
                     translation: item.translation,
-                    isTranslating: item.isShowLoading,
                     fontSize: fontSize
                 )
                 .padding(.horizontal)
