@@ -17,7 +17,7 @@ class HomeViewModel: ObservableObject {
 
     @Published var isRecording: Bool = false
 
-    @Published var inputDevices: [AVCaptureDevice] = []
+    @Published var inputDevices: [AudioDevice] = []
 
     @Published var audioLevel: Float = 0.0
 
@@ -55,7 +55,7 @@ class HomeViewModel: ObservableObject {
     init() {
         self.inputDevices = audioCaptureClient.getAvailableDevices()
         if let defaultDevice = inputDevices.first {
-            self.selectedDeviceID = defaultDevice.uniqueID
+            self.selectedDeviceID = defaultDevice.id
         }
         startStandaloneLevelMonitoring()
         Task { await checkTranslationModelStatus() }
@@ -63,13 +63,17 @@ class HomeViewModel: ObservableObject {
 
     private func applyDeviceChange() {
         Task {
-            await audioCaptureClient.setInputDevice(selectedDeviceID)
+            await applyDeviceChangeTask()
+        }
+    }
+    
+    func applyDeviceChangeTask() async {
+        await audioCaptureClient.setInputDevice(selectedDeviceID)
 
-            if isRecording {
-                restartRecording()
-            } else {
-                restartStandaloneLevelMonitoring()
-            }
+        if isRecording {
+            restartRecording()
+        } else {
+            restartStandaloneLevelMonitoring()
         }
     }
 
@@ -102,68 +106,92 @@ class HomeViewModel: ObservableObject {
     }
 
     func startRecording() {
+        Task {
+            await startRecordingTask()
+        }
+    }
+
+    func startRecordingTask() async {
         guard !isRecording else { return }
         isRecording = true
         
         stopStandaloneLevelMonitoring()
 
-        Task {
-            do {
-                let audioStream = try await audioCaptureClient.startStream()
+        do {
+            let audioStream = try await audioCaptureClient.startStream()
 
-                let transcriptionStream = await speechRecognitionClient.startRecognition(
-                    audioStream,
-                    sourceLocale
-                )
+            let transcriptionStream = await speechRecognitionClient.startRecognition(
+                audioStream,
+                sourceLocale
+            )
 
-                let levelStream = await audioCaptureClient.startLevelMonitoring()
+            let levelStream = await audioCaptureClient.startLevelMonitoring()
 
-                Task {
-                    for await result in transcriptionStream {
-                        await handleRecognitionResult(result)
-                    }
+            Task {
+                for await result in transcriptionStream {
+                    await handleRecognitionResult(result)
                 }
-
-                Task {
-                    for await level in levelStream {
-                        self.audioLevel = level
-                    }
-                }
-
-            } catch {
-                print("Error starting recording: \(error)")
-                isRecording = false
-                startStandaloneLevelMonitoring()
             }
-        }
-    }
 
-    func stopRecording() {
-        guard isRecording else { return }
-        Task {
-            await audioCaptureClient.stopStream()
-            await speechRecognitionClient.stopRecognition()
+            Task {
+                for await level in levelStream {
+                    self.audioLevel = level
+                }
+            }
+
+        } catch {
+            print("Error starting recording: \(error)")
             isRecording = false
             startStandaloneLevelMonitoring()
         }
     }
 
-    func clearTranscripts() {
-        transcripts.removeAll()
+    func stopRecording() {
         Task {
-            await translationClient.reset()
+            await stopRecordingTask()
+        }
+    }
+    
+    func stopRecordingTask() async {
+        guard isRecording else { return }
+        await audioCaptureClient.stopStream()
+        await speechRecognitionClient.stopRecognition()
+        isRecording = false
+        startStandaloneLevelMonitoring()
+    }
+
+    func clearTranscripts() {
+        Task {
+            await clearTranscriptsTask()
         }
     }
 
+    func clearTranscriptsTask() async {
+        transcripts.removeAll()
+        await translationClient.reset()
+    }
+
     func handleSourceLanguageChange() {
-        Task { await checkTranslationModelStatus() }
+        Task {
+            await handleSourceLanguageChangeTask()
+        }
+    }
+    
+    func handleSourceLanguageChangeTask() async {
+        await checkTranslationModelStatus()
         if isRecording {
-            restartRecording()
+            await restartRecordingTask()
         }
     }
     
     func handleTargetLanguageChange() {
-        Task { await checkTranslationModelStatus() }
+        Task {
+            await handleTargetLanguageChangeTask()
+        }
+    }
+
+    func handleTargetLanguageChangeTask() async {
+        await checkTranslationModelStatus()
     }
     
     func checkTranslationModelStatus() async {
@@ -184,38 +212,43 @@ class HomeViewModel: ObservableObject {
 
     private func restartRecording() {
         Task {
-            await audioCaptureClient.stopStream()
-            await speechRecognitionClient.stopRecognition()
+            await restartRecordingTask()
+        }
+    }
+    
+    // Made internal for testing if needed, or simply used by other tasks
+    func restartRecordingTask() async {
+        await audioCaptureClient.stopStream()
+        await speechRecognitionClient.stopRecognition()
 
-            try? await Task.sleep(nanoseconds: 300_000_000)
+        try? await Task.sleep(nanoseconds: 300_000_000)
 
-            do {
-                let audioStream = try await audioCaptureClient.startStream()
+        do {
+            let audioStream = try await audioCaptureClient.startStream()
 
-                let transcriptionStream = await speechRecognitionClient.startRecognition(
-                    audioStream,
-                    sourceLocale
-                )
+            let transcriptionStream = await speechRecognitionClient.startRecognition(
+                audioStream,
+                sourceLocale
+            )
 
-                let levelStream = await audioCaptureClient.startLevelMonitoring()
+            let levelStream = await audioCaptureClient.startLevelMonitoring()
 
-                Task {
-                    for await result in transcriptionStream {
-                        await handleRecognitionResult(result)
-                    }
+            Task {
+                for await result in transcriptionStream {
+                    await handleRecognitionResult(result)
                 }
-
-                Task {
-                    for await level in levelStream {
-                        self.audioLevel = level
-                    }
-                }
-
-            } catch {
-                print("Error restarting recording: \(error)")
-                isRecording = false
-                startStandaloneLevelMonitoring()
             }
+
+            Task {
+                for await level in levelStream {
+                    self.audioLevel = level
+                }
+            }
+
+        } catch {
+            print("Error restarting recording: \(error)")
+            isRecording = false
+            startStandaloneLevelMonitoring()
         }
     }
 

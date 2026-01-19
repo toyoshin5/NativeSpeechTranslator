@@ -26,6 +26,20 @@ targets:
         product: Dependencies
     entitlements:
         path: NativeSpeechTranslator/NativeSpeechTranslator.entitlements
+  NativeSpeechTranslatorTests:
+    type: bundle.unit-test
+    platform: macOS
+    deploymentTarget: "26.0"
+    sources:
+      - NativeSpeechTranslatorTests
+    dependencies:
+      - target: NativeSpeechTranslator
+      - package: SwiftDependencies
+        product: Dependencies
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: YES
+        PRODUCT_BUNDLE_IDENTIFIER: com.example.NativeSpeechTranslatorTests
 schemes:
   NativeSpeechTranslator:
     build:
@@ -35,6 +49,9 @@ schemes:
       config: Debug
     test:
       config: Debug
+      gatherCoverageData: true
+      targets:
+        - NativeSpeechTranslatorTests
     profile:
       config: Release
     analyze:

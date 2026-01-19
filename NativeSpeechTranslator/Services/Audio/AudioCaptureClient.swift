@@ -1,6 +1,11 @@
 import AVFoundation
 import Dependencies
 
+struct AudioDevice: Equatable, Identifiable, Sendable {
+    let id: String
+    let name: String
+}
+
 struct AudioCaptureClient {
     var setInputDevice: @Sendable (String?) async -> Void
     var startStream: @Sendable () async throws -> AsyncStream<(AVAudioPCMBuffer, AVAudioTime)>
@@ -8,7 +13,7 @@ struct AudioCaptureClient {
     var startLevelMonitoring: @Sendable () async -> AsyncStream<Float>
     var startLevelMonitoringOnly: @Sendable () async -> AsyncStream<Float>
     var stopLevelMonitoringOnly: @Sendable () async -> Void
-    var getAvailableDevices: @Sendable () -> [AVCaptureDevice]
+    var getAvailableDevices: @Sendable () -> [AudioDevice]
 }
 
 extension DependencyValues {
@@ -39,7 +44,9 @@ extension AudioCaptureClient: DependencyKey {
             await AudioCaptureService.shared.stopLevelMonitoringOnly()
         },
         getAvailableDevices: {
-            AudioCaptureService.shared.getAvailableDevices()
+            AudioCaptureService.shared.getAvailableDevices().map { device in
+                AudioDevice(id: device.uniqueID, name: device.localizedName)
+            }
         }
     )
 

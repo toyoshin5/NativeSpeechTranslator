@@ -41,8 +41,8 @@ struct HomeView: View {
         VStack(spacing: 0) {
             HStack {
                 Picker("入力デバイス", selection: $viewModel.selectedDeviceID) {
-                    ForEach(viewModel.inputDevices, id: \.uniqueID) { device in
-                        Text(device.localizedName).tag(device.uniqueID as String?)
+                    ForEach(viewModel.inputDevices, id: \.id) { device in
+                        Text(device.name).tag(device.id)
                     }
                 }
                 .pickerStyle(MenuPickerStyle())
