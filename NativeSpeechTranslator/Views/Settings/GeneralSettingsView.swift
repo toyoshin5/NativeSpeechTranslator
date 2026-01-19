@@ -1,12 +1,12 @@
+import Dependencies
+import FoundationModels
 import SwiftUI
 import Translation
-import FoundationModels
-import Dependencies
 
 struct GeneralSettingsView: View {
     @AppStorage("sourceLanguage") private var sourceLanguage: String = "en-US"
     @AppStorage("targetLanguage") private var targetLanguage: String = "ja-JP"
-    
+
     @AppStorage("llmTranslationEnabled") private var llmTranslationEnabled: Bool = false
     @AppStorage("llmProvider") private var llmProviderString: String = "foundation"
     @AppStorage("llmModel") private var llmModel: String = "default"
@@ -37,7 +37,8 @@ struct GeneralSettingsView: View {
                 llmProviderString = newValue
                 connectionTestResult = nil
                 if let provider = LLMProvider(rawValue: newValue),
-                   let firstModel = provider.availableModels.first {
+                    let firstModel = provider.availableModels.first
+                {
                     llmModel = firstModel
                 }
             }
@@ -47,7 +48,7 @@ struct GeneralSettingsView: View {
     private var isFoundationModelsAvailable: Bool {
         SystemLanguageModel.default.isAvailable
     }
-    
+
     @Dependency(\.translationClient) var translationClient
 
     var body: some View {
@@ -62,7 +63,7 @@ struct GeneralSettingsView: View {
                     if newValue == targetLanguage {
                         targetLanguage = oldValue
                     }
-                    
+
                     Task {
                         await translationClient.refreshLanguages()
                     }
@@ -77,7 +78,7 @@ struct GeneralSettingsView: View {
                     if newValue == sourceLanguage {
                         sourceLanguage = oldValue
                     }
-                    
+
                     Task {
                         await translationClient.refreshLanguages()
                     }
@@ -85,7 +86,7 @@ struct GeneralSettingsView: View {
             }
 
             AppleTranslationSettingsView()
-            
+
             Section("LLM翻訳") {
                 Toggle("LLM翻訳を有効化", isOn: $llmTranslationEnabled)
 
@@ -128,7 +129,7 @@ struct GeneralSettingsView: View {
                                     return "Apple Intelligenceが利用できません"
                                 }
                             }()
-                            
+
                             Text(message)
                                 .font(.caption)
                                 .foregroundStyle(.red)
@@ -193,7 +194,7 @@ struct GeneralSettingsView: View {
         isTestingConnection = true
         connectionTestResult = nil
 
-        Task {         
+        Task {
             let result = await TranslationLLMService.testConnection(
                 provider: llmProvider,
                 model: llmModel,

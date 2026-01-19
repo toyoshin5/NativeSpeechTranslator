@@ -27,13 +27,13 @@ class HomeViewModel: ObservableObject {
             applyDeviceChange()
         }
     }
-    
+
     @Published var isTranslationModelInstalled: Bool = false
 
     private var sourceLanguageIdentifier: String {
         UserDefaults.standard.string(forKey: "sourceLanguage") ?? "en-US"
     }
-    
+
     private var targetLanguageIdentifier: String {
         UserDefaults.standard.string(forKey: "targetLanguage") ?? "ja-JP"
     }
@@ -66,7 +66,7 @@ class HomeViewModel: ObservableObject {
             await applyDeviceChangeTask()
         }
     }
-    
+
     func applyDeviceChangeTask() async {
         await audioCaptureClient.setInputDevice(selectedDeviceID)
 
@@ -76,7 +76,6 @@ class HomeViewModel: ObservableObject {
             restartStandaloneLevelMonitoring()
         }
     }
-
 
     private func startStandaloneLevelMonitoring() {
         levelMonitoringTask?.cancel()
@@ -114,7 +113,7 @@ class HomeViewModel: ObservableObject {
     func startRecordingTask() async {
         guard !isRecording else { return }
         isRecording = true
-        
+
         stopStandaloneLevelMonitoring()
 
         do {
@@ -151,7 +150,7 @@ class HomeViewModel: ObservableObject {
             await stopRecordingTask()
         }
     }
-    
+
     func stopRecordingTask() async {
         guard isRecording else { return }
         await audioCaptureClient.stopStream()
@@ -176,14 +175,14 @@ class HomeViewModel: ObservableObject {
             await handleSourceLanguageChangeTask()
         }
     }
-    
+
     func handleSourceLanguageChangeTask() async {
         await checkTranslationModelStatus()
         if isRecording {
             await restartRecordingTask()
         }
     }
-    
+
     func handleTargetLanguageChange() {
         Task {
             await handleTargetLanguageChangeTask()
@@ -193,29 +192,29 @@ class HomeViewModel: ObservableObject {
     func handleTargetLanguageChangeTask() async {
         await checkTranslationModelStatus()
     }
-    
+
     func checkTranslationModelStatus() async {
-        isTranslationModelInstalled = await translationClient.isTranslationModelInstalled(sourceLocale.language, targetLocale.language)
-        
+        isTranslationModelInstalled = await translationClient.isTranslationModelInstalled(
+            sourceLocale.language, targetLocale.language)
+
         if !isTranslationModelInstalled && isRecording {
             stopRecording()
         }
     }
-    
+
     func getDisplayLanguageName(for identifier: String) -> String {
-        if let lang = SupportedLanguage(rawValue: identifier){
+        if let lang = SupportedLanguage(rawValue: identifier) {
             return lang.displayName
         }
         return identifier
     }
-        
 
     private func restartRecording() {
         Task {
             await restartRecordingTask()
         }
     }
-    
+
     // Made internal for testing if needed, or simply used by other tasks
     func restartRecordingTask() async {
         await audioCaptureClient.stopStream()
@@ -288,10 +287,15 @@ class HomeViewModel: ObservableObject {
                 if isFinal {
                     let llmEnabled = UserDefaults.standard.bool(forKey: "llmTranslationEnabled")
                     if llmEnabled {
-                        let sourceName = Locale(identifier: "en").localizedString(forIdentifier: sourceLanguageIdentifier) ?? sourceLanguageIdentifier
-                        let targetName = Locale(identifier: "en").localizedString(forIdentifier: targetLanguageIdentifier) ?? targetLanguageIdentifier
-                        
-                        let refined = await translationClient.translateWithLLM(text, translation, sourceName, targetName)
+                        let sourceName =
+                            Locale(identifier: "en").localizedString(
+                                forIdentifier: sourceLanguageIdentifier) ?? sourceLanguageIdentifier
+                        let targetName =
+                            Locale(identifier: "en").localizedString(
+                                forIdentifier: targetLanguageIdentifier) ?? targetLanguageIdentifier
+
+                        let refined = await translationClient.translateWithLLM(
+                            text, translation, sourceName, targetName)
                         if index < transcripts.count {
                             transcripts[index].translation = refined
                         }

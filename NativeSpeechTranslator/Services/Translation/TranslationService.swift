@@ -7,7 +7,7 @@ class TranslationService: ObservableObject {
     static let shared = TranslationService()
 
     @Published var configuration: TranslationSession.Configuration?
-    @Published private(set) var sessionId: Int = 0 // .translationTask()を再生成するため
+    @Published private(set) var sessionId: Int = 0  // .translationTask()を再生成するため
 
     struct Request {
         let text: String
@@ -25,7 +25,7 @@ class TranslationService: ObservableObject {
         let targetID = UserDefaults.standard.string(forKey: "targetLanguage") ?? "ja-JP"
         self.source = Locale.Language(identifier: sourceID)
         self.target = Locale.Language(identifier: targetID)
-        
+
         let (stream, continuation) = AsyncStream<Request>.makeStream()
         self.requestStream = stream
         self.requestContinuation = continuation
@@ -33,10 +33,9 @@ class TranslationService: ObservableObject {
         self.configuration = TranslationSession.Configuration(source: source, target: target)
     }
 
-
     func translate(_ text: String) async throws -> String {
         if configuration == nil {
-             configuration = TranslationSession.Configuration(source: source, target: target)
+            configuration = TranslationSession.Configuration(source: source, target: target)
         }
 
         return try await withCheckedThrowingContinuation { continuation in
@@ -76,7 +75,8 @@ class TranslationService: ObservableObject {
         }
     }
 
-    func isTranslationModelInstalled(source: Locale.Language, target: Locale.Language) async -> Bool {
+    func isTranslationModelInstalled(source: Locale.Language, target: Locale.Language) async -> Bool
+    {
         let status = await LanguageAvailability().status(from: source, to: target)
         return status == .installed
     }

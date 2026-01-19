@@ -1,4 +1,3 @@
-
 import SwiftUI
 
 struct RecordingButton: View {
@@ -48,7 +47,10 @@ struct RecordingButton: View {
                     .shadow(color: .black.opacity(0.15), radius: 4, x: 0, y: 2)
                     .overlay(
                         Capsule()
-                            .stroke(isRecording ? Color.red.opacity(0.5) : Color(NSColor.separatorColor), lineWidth: 1)
+                            .stroke(
+                                isRecording
+                                    ? Color.red.opacity(0.5) : Color(NSColor.separatorColor),
+                                lineWidth: 1)
                     )
                     .frame(height: 52)
             }

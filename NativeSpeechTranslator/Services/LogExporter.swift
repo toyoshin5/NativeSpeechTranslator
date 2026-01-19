@@ -52,7 +52,8 @@ struct LogExporter {
         return content
     }
 
-    static func saveToFile(transcripts: [HomeViewModel.TranscriptItem], directory: URL) throws -> URL
+    static func saveToFile(transcripts: [HomeViewModel.TranscriptItem], directory: URL) throws
+        -> URL
     {
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "yyyyMMdd_HHmmss"

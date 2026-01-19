@@ -7,7 +7,7 @@ struct TranscriptRow: View {
 
     /// 翻訳文
     let translation: String?
-    
+
     let fontSize: CGFloat
 
     var body: some View {

@@ -23,15 +23,23 @@ enum OpenAICompatibleService {
         }
     }
 
-    static func translate(original: String, direct: String, sourceLanguage: String, targetLanguage: String, model: String, apiKey: String, baseURL: String) async -> String {
+    static func translate(
+        original: String, direct: String, sourceLanguage: String, targetLanguage: String,
+        model: String, apiKey: String, baseURL: String
+    ) async -> String {
         guard !apiKey.isEmpty else { return direct }
         guard let url = URL(string: baseURL) else { return direct }
 
         let request = Request(
             model: model,
             messages: [
-                Request.Message(role: "system", content: TranslationPrompt.systemPrompt(sourceLanguage: sourceLanguage, targetLanguage: targetLanguage)),
-                Request.Message(role: "user", content: TranslationPrompt.userPrompt(original: original, direct: direct))
+                Request.Message(
+                    role: "system",
+                    content: TranslationPrompt.systemPrompt(
+                        sourceLanguage: sourceLanguage, targetLanguage: targetLanguage)),
+                Request.Message(
+                    role: "user",
+                    content: TranslationPrompt.userPrompt(original: original, direct: direct)),
             ],
         )
 
@@ -44,8 +52,11 @@ enum OpenAICompatibleService {
             urlRequest.httpBody = try JSONEncoder().encode(request)
             let (data, _) = try await URLSession.shared.data(for: urlRequest)
             let response = try JSONDecoder().decode(Response.self, from: data)
-            let result = response.choices.first?.message.content.trimmingCharacters(in: .whitespacesAndNewlines) ?? direct
-            print("[LLM] OpenAI Compatible: '\(original.prefix(30))...' -> '\(result.prefix(30))...'")
+            let result =
+                response.choices.first?.message.content.trimmingCharacters(
+                    in: .whitespacesAndNewlines) ?? direct
+            print(
+                "[LLM] OpenAI Compatible: '\(original.prefix(30))...' -> '\(result.prefix(30))...'")
             return result
         } catch {
             print("[LLM] OpenAI Compatible API error: \(error)")
@@ -53,7 +64,9 @@ enum OpenAICompatibleService {
         }
     }
 
-    static func testConnection(model: String, apiKey: String, baseURL: String) async -> Result<Void, Error> {
+    static func testConnection(model: String, apiKey: String, baseURL: String) async -> Result<
+        Void, Error
+    > {
         guard !apiKey.isEmpty else { return .failure(LLMError.emptyAPIKey) }
         guard let url = URL(string: baseURL) else { return .failure(LLMError.invalidURL) }
 
@@ -73,7 +86,8 @@ enum OpenAICompatibleService {
 
             if let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode != 200 {
                 let errorMessage = String(data: data, encoding: .utf8) ?? "Unknown error"
-                return .failure(LLMError.apiError(statusCode: httpResponse.statusCode, message: errorMessage))
+                return .failure(
+                    LLMError.apiError(statusCode: httpResponse.statusCode, message: errorMessage))
             }
 
             _ = try JSONDecoder().decode(Response.self, from: data)

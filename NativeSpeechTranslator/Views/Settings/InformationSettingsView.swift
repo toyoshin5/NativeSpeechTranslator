@@ -13,8 +13,10 @@ struct InformationSettingsView: View {
                     .font(.title2)
                     .fontWeight(.medium)
 
-                Text("Version \(Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "0.0.0")")
-                    .foregroundStyle(.secondary)
+                Text(
+                    "Version \(Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "0.0.0")"
+                )
+                .foregroundStyle(.secondary)
             }
 
             VStack(spacing: 4) {

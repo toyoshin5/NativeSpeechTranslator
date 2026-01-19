@@ -19,7 +19,7 @@ enum SupportedLanguage: String, CaseIterable, Identifiable {
     case portuguese = "pt-PT"
 
     var id: String { rawValue }
-    
+
     var displayName: String {
         Locale.current.localizedString(forLanguageCode: String(rawValue.prefix(2))) ?? self.rawValue
     }

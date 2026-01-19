@@ -18,12 +18,15 @@ struct AppleTranslationSettingsView: View {
     }
 
     var body: some View {
-        Section("翻訳モデル (\(getDisplayLanguageName(for: sourceLanguageIdentifier)) → \(getDisplayLanguageName(for: targetLanguageIdentifier)))") {
+        Section(
+            "翻訳モデル (\(getDisplayLanguageName(for: sourceLanguageIdentifier)) → \(getDisplayLanguageName(for: targetLanguageIdentifier)))"
+        ) {
             HStack {
                 if let status = status {
                     switch status {
                     case .installed:
-                        Label("インストール済み", systemImage: "checkmark.circle.fill").foregroundStyle(.green)
+                        Label("インストール済み", systemImage: "checkmark.circle.fill").foregroundStyle(
+                            .green)
                     case .supported:
                         Label("ダウンロード可能", systemImage: "arrow.down.circle").foregroundStyle(.orange)
                     case .unsupported:
@@ -73,7 +76,8 @@ struct AppleTranslationSettingsView: View {
     }
 
     private func startDownload() {
-        downloadConfiguration = TranslationSession.Configuration(source: sourceLanguage, target: targetLanguage)
+        downloadConfiguration = TranslationSession.Configuration(
+            source: sourceLanguage, target: targetLanguage)
     }
 
     private func checkStatus() async {
@@ -81,9 +85,9 @@ struct AppleTranslationSettingsView: View {
         let status = await availability.status(from: sourceLanguage, to: targetLanguage)
         self.status = status
     }
-    
+
     private func getDisplayLanguageName(for identifier: String) -> String {
-        if let lang = SupportedLanguage(rawValue: identifier){
+        if let lang = SupportedLanguage(rawValue: identifier) {
             return lang.displayName
         }
         return identifier

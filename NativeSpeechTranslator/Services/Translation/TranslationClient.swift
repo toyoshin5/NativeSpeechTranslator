@@ -42,7 +42,8 @@ extension TranslationClient: DependencyKey {
             await FoundationModelService.shared.reset()
         },
         isTranslationModelInstalled: { source, target in
-            await TranslationService.shared.isTranslationModelInstalled(source: source, target: target)
+            await TranslationService.shared.isTranslationModelInstalled(
+                source: source, target: target)
         }
     )
 

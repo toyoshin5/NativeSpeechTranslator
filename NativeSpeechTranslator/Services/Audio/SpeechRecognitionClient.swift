@@ -1,9 +1,12 @@
-import Dependencies
 import AVFoundation
+import Dependencies
 import Foundation
 
 struct SpeechRecognitionClient {
-    var startRecognition: @Sendable (AsyncStream<(AVAudioPCMBuffer, AVAudioTime)>, Locale) async -> AsyncStream<TranscriptionResult>
+    var startRecognition:
+        @Sendable (AsyncStream<(AVAudioPCMBuffer, AVAudioTime)>, Locale) async -> AsyncStream<
+            TranscriptionResult
+        >
     var stopRecognition: @Sendable () async -> Void
 }
 
@@ -17,7 +20,8 @@ extension DependencyValues {
 extension SpeechRecognitionClient: DependencyKey {
     static let liveValue = SpeechRecognitionClient(
         startRecognition: { audioStream, locale in
-            await SpeechRecognitionService.shared.startRecognition(audioStream: audioStream, locale: locale)
+            await SpeechRecognitionService.shared.startRecognition(
+                audioStream: audioStream, locale: locale)
         },
         stopRecognition: {
             await SpeechRecognitionService.shared.stopRecognition()
@@ -37,7 +41,8 @@ extension SpeechRecognitionClient: DependencyKey {
     static let previewValue = SpeechRecognitionClient(
         startRecognition: { _, _ in
             AsyncStream { continuation in
-                continuation.yield(TranscriptionResult(text: "Preview Transcription", isFinal: false))
+                continuation.yield(
+                    TranscriptionResult(text: "Preview Transcription", isFinal: false))
                 continuation.finish()
             }
         },

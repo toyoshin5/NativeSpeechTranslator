@@ -1,5 +1,5 @@
-import SwiftUI
 import FoundationModels
+import SwiftUI
 
 @main
 @available(macOS 26, *)

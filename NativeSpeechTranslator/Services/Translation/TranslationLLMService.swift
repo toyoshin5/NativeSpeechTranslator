@@ -8,10 +8,13 @@ actor TranslationLLMService {
 
     private init() {}
 
-    func translate(original: String, direct: String, sourceLanguage: String, targetLanguage: String) async -> String {
+    func translate(original: String, direct: String, sourceLanguage: String, targetLanguage: String)
+        async -> String
+    {
         let providerString = UserDefaults.standard.string(forKey: "llmProvider") ?? "foundation"
         let provider = LLMProvider(rawValue: providerString) ?? .foundation
-        let model = UserDefaults.standard.string(forKey: "llmModel") ?? provider.availableModels.first ?? ""
+        let model =
+            UserDefaults.standard.string(forKey: "llmModel") ?? provider.availableModels.first ?? ""
 
         let task = Task<String, Never> {
             switch provider {
@@ -65,7 +68,9 @@ actor TranslationLLMService {
         Task { await FoundationModelService.shared.reset() }
     }
 
-    static func testConnection(provider: LLMProvider, model: String, apiKey: String) async -> Result<Void, Error> {
+    static func testConnection(provider: LLMProvider, model: String, apiKey: String) async
+        -> Result<Void, Error>
+    {
         switch provider {
         case .openai:
             return await OpenAICompatibleService.testConnection(

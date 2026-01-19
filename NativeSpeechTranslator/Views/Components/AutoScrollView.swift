@@ -15,7 +15,10 @@ struct AutoScrollView<Content: View, Item: Identifiable>: View {
     @State private var scrollViewHeight: CGFloat = 0
     @State private var contentHeight: CGFloat = 0
 
-    init(items: [Item], isAutoScrollEnabled: Bool = true, @ViewBuilder content: @escaping (Item) -> Content) {
+    init(
+        items: [Item], isAutoScrollEnabled: Bool = true,
+        @ViewBuilder content: @escaping (Item) -> Content
+    ) {
         self.items = items
         self.isAutoScrollEnabled = isAutoScrollEnabled
         self.content = content

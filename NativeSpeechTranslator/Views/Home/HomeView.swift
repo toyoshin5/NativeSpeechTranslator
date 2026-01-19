@@ -35,7 +35,6 @@ struct HomeView: View {
 
     @AppStorage("sourceLanguage") private var sourceLanguage: String = "en-US"
     @AppStorage("targetLanguage") private var targetLanguage: String = "ja-JP"
-    
 
     var body: some View {
         VStack(spacing: 0) {
@@ -51,7 +50,7 @@ struct HomeView: View {
                 AudioVisualizerView(level: viewModel.audioLevel)
                     .frame(width: 80, height: 20)
                     .padding(.leading, 8)
-                
+
                 HStack(spacing: 8) {
                     Image(systemName: "textformat.size.smaller")
                         .foregroundStyle(.secondary)
@@ -82,10 +81,11 @@ struct HomeView: View {
             }
             .frame(height: 32)
             .background(Color(NSColor.windowBackgroundColor))
-            
+
             Divider()
 
-            AutoScrollView(items: viewModel.transcripts, isAutoScrollEnabled: isAutoScrollEnabled) { item in
+            AutoScrollView(items: viewModel.transcripts, isAutoScrollEnabled: isAutoScrollEnabled) {
+                item in
                 TranscriptRow(
                     original: item.original,
                     translation: item.translation,
@@ -120,7 +120,7 @@ struct HomeView: View {
                         Image(systemName: "exclamationmark.triangle.fill")
                             .foregroundStyle(.yellow)
                         Text("翻訳モデルがインストールされていません")
-                            .foregroundStyle(.secondary)                    
+                            .foregroundStyle(.secondary)
                         SettingsLink {
                             Text("設定を開く")
                         }
@@ -128,7 +128,7 @@ struct HomeView: View {
                     }
                     .padding(.top, 8)
                 }
-                
+
             }
 
             HStack {
