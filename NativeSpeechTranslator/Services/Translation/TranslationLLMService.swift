@@ -19,7 +19,7 @@ actor TranslationLLMService {
         let task = Task<String, Never> {
             switch provider {
             case .openai:
-                return await OpenAICompatibleService.translate(
+                return await OpenAICompatibleService().translate(
                     original: original,
                     direct: direct,
                     sourceLanguage: sourceLanguage,
@@ -29,7 +29,7 @@ actor TranslationLLMService {
                     baseURL: "https://api.openai.com/v1/chat/completions"
                 )
             case .groq:
-                return await OpenAICompatibleService.translate(
+                return await OpenAICompatibleService().translate(
                     original: original,
                     direct: direct,
                     sourceLanguage: sourceLanguage,
@@ -39,7 +39,7 @@ actor TranslationLLMService {
                     baseURL: "https://api.groq.com/openai/v1/chat/completions"
                 )
             case .cerebras:
-                return await OpenAICompatibleService.translate(
+                return await OpenAICompatibleService().translate(
                     original: original,
                     direct: direct,
                     sourceLanguage: sourceLanguage,
@@ -73,19 +73,19 @@ actor TranslationLLMService {
     {
         switch provider {
         case .openai:
-            return await OpenAICompatibleService.testConnection(
+            return await OpenAICompatibleService().testConnection(
                 model: model,
                 apiKey: apiKey,
                 baseURL: "https://api.openai.com/v1/chat/completions"
             )
         case .groq:
-            return await OpenAICompatibleService.testConnection(
+            return await OpenAICompatibleService().testConnection(
                 model: model,
                 apiKey: apiKey,
                 baseURL: "https://api.groq.com/openai/v1/chat/completions"
             )
         case .cerebras:
-            return await OpenAICompatibleService.testConnection(
+            return await OpenAICompatibleService().testConnection(
                 model: model,
                 apiKey: apiKey,
                 baseURL: "https://api.cerebras.ai/v1/chat/completions"

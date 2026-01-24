@@ -1,11 +1,16 @@
+import Dependencies
 import Foundation
 
-enum OpenAICompatibleService {
-    struct Request: Encodable {
+struct OpenAICompatibleService {
+    @Dependency(\.httpClient) var httpClient: any HTTPClient
+    
+    init() {}
+    
+    struct Request: Codable {
         let model: String
         let messages: [Message]
 
-        struct Message: Encodable {
+        struct Message: Codable {
             let role: String
             let content: String
         }
@@ -23,7 +28,7 @@ enum OpenAICompatibleService {
         }
     }
 
-    static func translate(
+    func translate(
         original: String, direct: String, sourceLanguage: String, targetLanguage: String,
         model: String, apiKey: String, baseURL: String
     ) async -> String {
@@ -50,7 +55,8 @@ enum OpenAICompatibleService {
 
         do {
             urlRequest.httpBody = try JSONEncoder().encode(request)
-            let (data, _) = try await URLSession.shared.data(for: urlRequest)
+            // Use injected httpClient
+            let (data, _) = try await httpClient.data(for: urlRequest)
             let response = try JSONDecoder().decode(Response.self, from: data)
             let result =
                 response.choices.first?.message.content.trimmingCharacters(
@@ -64,7 +70,7 @@ enum OpenAICompatibleService {
         }
     }
 
-    static func testConnection(model: String, apiKey: String, baseURL: String) async -> Result<
+    func testConnection(model: String, apiKey: String, baseURL: String) async -> Result<
         Void, Error
     > {
         guard !apiKey.isEmpty else { return .failure(LLMError.emptyAPIKey) }
@@ -82,7 +88,8 @@ enum OpenAICompatibleService {
 
         do {
             urlRequest.httpBody = try JSONEncoder().encode(request)
-            let (data, response) = try await URLSession.shared.data(for: urlRequest)
+            // Use injected httpClient
+            let (data, response) = try await httpClient.data(for: urlRequest)
 
             if let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode != 200 {
                 let errorMessage = String(data: data, encoding: .utf8) ?? "Unknown error"
