@@ -4,6 +4,11 @@ import Testing
 
 @testable import NativeSpeechTranslator
 
+private actor CallLogger {
+    var log: [String] = []
+    func append(_ value: String) { log.append(value) }
+}
+
 @Suite("HomeViewModel Tests")
 @MainActor
 struct HomeViewModelTests {
@@ -255,5 +260,89 @@ struct HomeViewModelTests {
         }
 
         #expect(model.getDisplayLanguageName(for: "en-US") != "en-US")  // 言語ごとの名前になること
+    }
+
+    @Test("isFinal かつ LLM 有効のときだけ LLM 翻訳が1回呼ばれる")
+    func testLLMTranslationCalledOnlyOnFinalWithLLMEnabled() async {
+        // Given
+        let callLogger = CallLogger()
+        let originalLLMSetting = UserDefaults.standard.bool(forKey: "llmTranslationEnabled")
+        UserDefaults.standard.set(true, forKey: "llmTranslationEnabled")
+
+        let model = withDependencies {
+            $0.audioCaptureClient = .testValue
+            $0.speechRecognitionClient.startRecognition = { _, _ in
+                AsyncStream { continuation in
+                    continuation.yield(TranscriptionResult(text: "Hel", isFinal: false))
+                    continuation.yield(TranscriptionResult(text: "Hello", isFinal: false))
+                    continuation.yield(TranscriptionResult(text: "Hello World", isFinal: true))
+                    continuation.finish()
+                }
+            }
+            $0.translationClient.translate = { _ in
+                await callLogger.append("t")
+                return "翻訳結果"
+            }
+            $0.translationClient.translateWithLLM = { _, _, _, _ in
+                await callLogger.append("l")
+                return "LLM翻訳結果"
+            }
+        } operation: {
+            HomeViewModel()
+        }
+
+        // When
+        await model.startRecordingTask()
+        try? await Task.sleep(nanoseconds: 500_000_000)
+
+        // Then
+        #expect(
+            await callLogger.log == ["t", "t", "t", "l"], "translate 3回の後に translateWithLLM 1回")
+        #expect(model.transcripts.count == 1)
+        #expect(model.transcripts.first?.translation == "LLM翻訳結果")
+
+        // Cleanup
+        UserDefaults.standard.set(originalLLMSetting, forKey: "llmTranslationEnabled")
+        await model.stopRecordingTask()
+    }
+
+    @Test("LLM 無効のときは translateWithLLM が呼ばれない")
+    func testLLMTranslationNotCalledWhenDisabled() async {
+        // Given
+        let callLogger = CallLogger()
+        let originalLLMSetting = UserDefaults.standard.bool(forKey: "llmTranslationEnabled")
+        UserDefaults.standard.set(false, forKey: "llmTranslationEnabled")
+
+        let model = withDependencies {
+            $0.audioCaptureClient = .testValue
+            $0.speechRecognitionClient.startRecognition = { _, _ in
+                AsyncStream { continuation in
+                    continuation.yield(TranscriptionResult(text: "Hello", isFinal: true))
+                    continuation.finish()
+                }
+            }
+            $0.translationClient.translate = { _ in
+                await callLogger.append("t")
+                return "翻訳結果"
+            }
+            $0.translationClient.translateWithLLM = { _, _, _, _ in
+                await callLogger.append("l")
+                return "LLM翻訳結果"
+            }
+        } operation: {
+            HomeViewModel()
+        }
+
+        // When
+        await model.startRecordingTask()
+        try? await Task.sleep(nanoseconds: 500_000_000)
+
+        // Then
+        #expect(await callLogger.log == ["t"], "translate のみ1回呼ばれ、translateWithLLM は呼ばれない")
+        #expect(model.transcripts.first?.translation == "翻訳結果")
+
+        // Cleanup
+        UserDefaults.standard.set(originalLLMSetting, forKey: "llmTranslationEnabled")
+        await model.stopRecordingTask()
     }
 }
