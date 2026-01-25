@@ -28,7 +28,7 @@ actor AudioCaptureService {
     private nonisolated func applySystemDefaultInputDevice(uid: String) {
         var audioDeviceID: AudioDeviceID = 0
         var size = UInt32(MemoryLayout<AudioDeviceID>.size)
-        var cfUID: CFString = uid as CFString
+        let cfUID: CFString = uid as CFString
 
         var translateAddress = AudioObjectPropertyAddress(
             mSelector: kAudioHardwarePropertyTranslateUIDToDevice,
@@ -36,16 +36,17 @@ actor AudioCaptureService {
             mElement: kAudioObjectPropertyElementMain
         )
 
-        guard
+        let status = withUnsafePointer(to: cfUID) { cfUIDPtr in
             AudioObjectGetPropertyData(
                 AudioObjectID(kAudioObjectSystemObject),
                 &translateAddress,
                 UInt32(MemoryLayout<CFString>.size),
-                &cfUID,
+                UnsafeMutableRawPointer(mutating: cfUIDPtr),
                 &size,
                 &audioDeviceID
-            ) == noErr
-        else { return }
+            )
+        }
+        guard status == noErr else { return }
 
         var defaultAddress = AudioObjectPropertyAddress(
             mSelector: kAudioHardwarePropertyDefaultInputDevice,
@@ -149,7 +150,7 @@ actor AudioCaptureService {
 
     nonisolated func getAvailableDevices() -> [AVCaptureDevice] {
         AVCaptureDevice.DiscoverySession(
-            deviceTypes: [.builtInMicrophone, .externalUnknown],
+            deviceTypes: [.microphone, .external],
             mediaType: .audio,
             position: .unspecified
         ).devices

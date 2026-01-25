@@ -128,7 +128,7 @@ class HomeViewModel: ObservableObject {
 
             Task {
                 for await result in transcriptionStream {
-                    await handleRecognitionResult(result)
+                    handleRecognitionResult(result)
                 }
             }
 
@@ -234,7 +234,7 @@ class HomeViewModel: ObservableObject {
 
             Task {
                 for await result in transcriptionStream {
-                    await handleRecognitionResult(result)
+                    handleRecognitionResult(result)
                 }
             }
 
