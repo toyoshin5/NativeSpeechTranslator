@@ -17,9 +17,10 @@ struct HomeViewModelTests {
     func testInitialState() async {
         // Given
         let model = withDependencies {
-            $0.audioCaptureClient = .testValue
-            $0.speechRecognitionClient = .testValue
-            $0.translationClient = .testValue
+            $0.audioCaptureClient.getAvailableDevices = { [] }
+            $0.audioCaptureClient.startLevelMonitoringOnly = { AsyncStream { $0.finish() } }
+            $0.audioCaptureClient.stopLevelMonitoringOnly = {}
+            $0.translationClient.isTranslationModelInstalled = { _, _ in true }
         } operation: {
             HomeViewModel()
         }
@@ -34,9 +35,16 @@ struct HomeViewModelTests {
     func testRecordingStartStop() async {
         // Given
         let model = withDependencies {
-            $0.audioCaptureClient = .testValue
-            $0.speechRecognitionClient = .testValue
-            $0.translationClient = .testValue
+            $0.audioCaptureClient.getAvailableDevices = { [] }
+            $0.audioCaptureClient.startLevelMonitoringOnly = { AsyncStream { $0.finish() } }
+            $0.audioCaptureClient.stopLevelMonitoringOnly = {}
+            $0.audioCaptureClient.setInputDevice = { _ in }
+            $0.audioCaptureClient.startStream = { AsyncStream { $0.finish() } }
+            $0.audioCaptureClient.stopStream = {}
+            $0.audioCaptureClient.startLevelMonitoring = { AsyncStream { $0.finish() } }
+            $0.speechRecognitionClient.startRecognition = { _, _ in AsyncStream { $0.finish() } }
+            $0.speechRecognitionClient.stopRecognition = {}
+            $0.translationClient.isTranslationModelInstalled = { _, _ in true }
         } operation: {
             HomeViewModel()
         }
@@ -59,14 +67,22 @@ struct HomeViewModelTests {
         // Given
         let transcriptionText = "こんにちは"
         let model = withDependencies {
-            $0.audioCaptureClient = .testValue
+            $0.audioCaptureClient.getAvailableDevices = { [] }
+            $0.audioCaptureClient.startLevelMonitoringOnly = { AsyncStream { $0.finish() } }
+            $0.audioCaptureClient.stopLevelMonitoringOnly = {}
+            $0.audioCaptureClient.setInputDevice = { _ in }
+            $0.audioCaptureClient.startStream = { AsyncStream { $0.finish() } }
+            $0.audioCaptureClient.stopStream = {}
+            $0.audioCaptureClient.startLevelMonitoring = { AsyncStream { $0.finish() } }
             $0.speechRecognitionClient.startRecognition = { _, _ in
                 AsyncStream { continuation in
                     continuation.yield(TranscriptionResult(text: transcriptionText, isFinal: true))
                     continuation.finish()
                 }
             }
+            $0.speechRecognitionClient.stopRecognition = {}
             $0.translationClient.translate = { _ in "Hello" }
+            $0.translationClient.isTranslationModelInstalled = { _, _ in true }
         } operation: {
             HomeViewModel()
         }
@@ -87,9 +103,12 @@ struct HomeViewModelTests {
     func testRecordingStartFailureHandling() async {
         // Given
         let model = withDependencies {
+            $0.audioCaptureClient.getAvailableDevices = { [] }
+            $0.audioCaptureClient.startLevelMonitoringOnly = { AsyncStream { $0.finish() } }
+            $0.audioCaptureClient.stopLevelMonitoringOnly = {}
+            $0.audioCaptureClient.setInputDevice = { _ in }
             $0.audioCaptureClient.startStream = { throw NSError(domain: "test", code: -1) }
-            $0.speechRecognitionClient = .testValue
-            $0.translationClient = .testValue
+            $0.translationClient.isTranslationModelInstalled = { _, _ in true }
         } operation: {
             HomeViewModel()
         }
@@ -105,9 +124,11 @@ struct HomeViewModelTests {
     func testClearTranscripts() async {
         // Given
         let model = withDependencies {
-            $0.audioCaptureClient = .testValue
-            $0.speechRecognitionClient = .testValue
-            $0.translationClient = .testValue
+            $0.audioCaptureClient.getAvailableDevices = { [] }
+            $0.audioCaptureClient.startLevelMonitoringOnly = { AsyncStream { $0.finish() } }
+            $0.audioCaptureClient.stopLevelMonitoringOnly = {}
+            $0.translationClient.isTranslationModelInstalled = { _, _ in true }
+            $0.translationClient.reset = {}
         } operation: {
             HomeViewModel()
         }
@@ -126,8 +147,15 @@ struct HomeViewModelTests {
     func testSourceLanguageChangeWhileRecording() async {
         // Given
         let model = withDependencies {
-            $0.audioCaptureClient = .testValue
-            $0.speechRecognitionClient = .testValue
+            $0.audioCaptureClient.getAvailableDevices = { [] }
+            $0.audioCaptureClient.startLevelMonitoringOnly = { AsyncStream { $0.finish() } }
+            $0.audioCaptureClient.stopLevelMonitoringOnly = {}
+            $0.audioCaptureClient.setInputDevice = { _ in }
+            $0.audioCaptureClient.startStream = { AsyncStream { $0.finish() } }
+            $0.audioCaptureClient.stopStream = {}
+            $0.audioCaptureClient.startLevelMonitoring = { AsyncStream { $0.finish() } }
+            $0.speechRecognitionClient.startRecognition = { _, _ in AsyncStream { $0.finish() } }
+            $0.speechRecognitionClient.stopRecognition = {}
             $0.translationClient.isTranslationModelInstalled = { _, _ in true }
         } operation: {
             HomeViewModel()
@@ -148,8 +176,9 @@ struct HomeViewModelTests {
     func testTargetLanguageChange() async {
         // Given
         let model = withDependencies {
-            $0.audioCaptureClient = .testValue
-            $0.speechRecognitionClient = .testValue
+            $0.audioCaptureClient.getAvailableDevices = { [] }
+            $0.audioCaptureClient.startLevelMonitoringOnly = { AsyncStream { $0.finish() } }
+            $0.audioCaptureClient.stopLevelMonitoringOnly = {}
             $0.translationClient.isTranslationModelInstalled = { _, _ in true }
         } operation: {
             HomeViewModel()
@@ -166,8 +195,15 @@ struct HomeViewModelTests {
     func testStopRecordingWhenModelNotInstalled() async {
         // Given
         let model = withDependencies {
-            $0.audioCaptureClient = .testValue
-            $0.speechRecognitionClient = .testValue
+            $0.audioCaptureClient.getAvailableDevices = { [] }
+            $0.audioCaptureClient.startLevelMonitoringOnly = { AsyncStream { $0.finish() } }
+            $0.audioCaptureClient.stopLevelMonitoringOnly = {}
+            $0.audioCaptureClient.setInputDevice = { _ in }
+            $0.audioCaptureClient.startStream = { AsyncStream { $0.finish() } }
+            $0.audioCaptureClient.stopStream = {}
+            $0.audioCaptureClient.startLevelMonitoring = { AsyncStream { $0.finish() } }
+            $0.speechRecognitionClient.startRecognition = { _, _ in AsyncStream { $0.finish() } }
+            $0.speechRecognitionClient.stopRecognition = {}
             $0.translationClient.isTranslationModelInstalled = { _, _ in false }
         } operation: {
             HomeViewModel()
@@ -194,8 +230,14 @@ struct HomeViewModelTests {
         let model = withDependencies {
             $0.audioCaptureClient.getAvailableDevices = { devices }
             $0.audioCaptureClient.setInputDevice = { _ in }
-            $0.speechRecognitionClient = .testValue
-            $0.translationClient = .testValue
+            $0.audioCaptureClient.startLevelMonitoringOnly = { AsyncStream { $0.finish() } }
+            $0.audioCaptureClient.stopLevelMonitoringOnly = {}
+            $0.audioCaptureClient.startStream = { AsyncStream { $0.finish() } }
+            $0.audioCaptureClient.stopStream = {}
+            $0.audioCaptureClient.startLevelMonitoring = { AsyncStream { $0.finish() } }
+            $0.speechRecognitionClient.startRecognition = { _, _ in AsyncStream { $0.finish() } }
+            $0.speechRecognitionClient.stopRecognition = {}
+            $0.translationClient.isTranslationModelInstalled = { _, _ in true }
         } operation: {
             HomeViewModel()
         }
@@ -229,8 +271,8 @@ struct HomeViewModelTests {
                     continuation.finish()
                 }
             }
-            $0.speechRecognitionClient = .testValue
-            $0.translationClient = .testValue
+            $0.audioCaptureClient.stopLevelMonitoringOnly = {}
+            $0.translationClient.isTranslationModelInstalled = { _, _ in true }
         } operation: {
             HomeViewModel()
         }
@@ -252,9 +294,10 @@ struct HomeViewModelTests {
     func testDisplayLanguageNameRetrieval() async {
         // Given
         let model = withDependencies {
-            $0.audioCaptureClient = .testValue
-            $0.speechRecognitionClient = .testValue
-            $0.translationClient = .testValue
+            $0.audioCaptureClient.getAvailableDevices = { [] }
+            $0.audioCaptureClient.startLevelMonitoringOnly = { AsyncStream { $0.finish() } }
+            $0.audioCaptureClient.stopLevelMonitoringOnly = {}
+            $0.translationClient.isTranslationModelInstalled = { _, _ in true }
         } operation: {
             HomeViewModel()
         }
@@ -270,7 +313,13 @@ struct HomeViewModelTests {
         UserDefaults.standard.set(true, forKey: "llmTranslationEnabled")
 
         let model = withDependencies {
-            $0.audioCaptureClient = .testValue
+            $0.audioCaptureClient.getAvailableDevices = { [] }
+            $0.audioCaptureClient.startLevelMonitoringOnly = { AsyncStream { $0.finish() } }
+            $0.audioCaptureClient.stopLevelMonitoringOnly = {}
+            $0.audioCaptureClient.setInputDevice = { _ in }
+            $0.audioCaptureClient.startStream = { AsyncStream { $0.finish() } }
+            $0.audioCaptureClient.stopStream = {}
+            $0.audioCaptureClient.startLevelMonitoring = { AsyncStream { $0.finish() } }
             $0.speechRecognitionClient.startRecognition = { _, _ in
                 AsyncStream { continuation in
                     continuation.yield(TranscriptionResult(text: "Hel", isFinal: false))
@@ -279,6 +328,7 @@ struct HomeViewModelTests {
                     continuation.finish()
                 }
             }
+            $0.speechRecognitionClient.stopRecognition = {}
             $0.translationClient.translate = { _ in
                 await callLogger.append("t")
                 return "翻訳結果"
@@ -287,6 +337,7 @@ struct HomeViewModelTests {
                 await callLogger.append("l")
                 return "LLM翻訳結果"
             }
+            $0.translationClient.isTranslationModelInstalled = { _, _ in true }
         } operation: {
             HomeViewModel()
         }
@@ -314,13 +365,20 @@ struct HomeViewModelTests {
         UserDefaults.standard.set(false, forKey: "llmTranslationEnabled")
 
         let model = withDependencies {
-            $0.audioCaptureClient = .testValue
+            $0.audioCaptureClient.getAvailableDevices = { [] }
+            $0.audioCaptureClient.startLevelMonitoringOnly = { AsyncStream { $0.finish() } }
+            $0.audioCaptureClient.stopLevelMonitoringOnly = {}
+            $0.audioCaptureClient.setInputDevice = { _ in }
+            $0.audioCaptureClient.startStream = { AsyncStream { $0.finish() } }
+            $0.audioCaptureClient.stopStream = {}
+            $0.audioCaptureClient.startLevelMonitoring = { AsyncStream { $0.finish() } }
             $0.speechRecognitionClient.startRecognition = { _, _ in
                 AsyncStream { continuation in
                     continuation.yield(TranscriptionResult(text: "Hello", isFinal: true))
                     continuation.finish()
                 }
             }
+            $0.speechRecognitionClient.stopRecognition = {}
             $0.translationClient.translate = { _ in
                 await callLogger.append("t")
                 return "翻訳結果"
@@ -329,6 +387,7 @@ struct HomeViewModelTests {
                 await callLogger.append("l")
                 return "LLM翻訳結果"
             }
+            $0.translationClient.isTranslationModelInstalled = { _, _ in true }
         } operation: {
             HomeViewModel()
         }

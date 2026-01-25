@@ -1,12 +1,25 @@
 import Dependencies
+import DependenciesMacros
 import Foundation
 
-struct TranslationClient {
-    var translate: @Sendable (String) async -> String
-    var translateWithLLM: @Sendable (String, String, String, String) async -> String
+@DependencyClient
+struct TranslationClient: Sendable {
+    @DependencyEndpoint
+    var translate: @Sendable (_ text: String) async -> String = { _ in "" }
+    @DependencyEndpoint
+    var translateWithLLM:
+        @Sendable (
+            _ original: String, _ direct: String, _ sourceLanguage: String, _ targetLanguage: String
+        ) async -> String = { _, _, _, _ in "" }
+    @DependencyEndpoint
     var refreshLanguages: @Sendable () async -> Void
+    @DependencyEndpoint
     var reset: @Sendable () async -> Void
-    var isTranslationModelInstalled: @Sendable (Locale.Language, Locale.Language) async -> Bool
+    @DependencyEndpoint
+    var isTranslationModelInstalled:
+        @Sendable (_ source: Locale.Language, _ target: Locale.Language) async -> Bool = { _, _ in
+            false
+        }
 }
 
 extension DependencyValues {
@@ -45,21 +58,5 @@ extension TranslationClient: DependencyKey {
             await TranslationService.shared.isTranslationModelInstalled(
                 source: source, target: target)
         }
-    )
-
-    static let testValue = TranslationClient(
-        translate: { _ in "Test Translation" },
-        translateWithLLM: { _, direct, _, _ in direct },
-        refreshLanguages: {},
-        reset: {},
-        isTranslationModelInstalled: { _, _ in true }
-    )
-
-    static let previewValue = TranslationClient(
-        translate: { _ in "Preview Translation" },
-        translateWithLLM: { _, _, _, _ in "Preview LLM Translation" },
-        refreshLanguages: {},
-        reset: {},
-        isTranslationModelInstalled: { _, _ in true }
     )
 }

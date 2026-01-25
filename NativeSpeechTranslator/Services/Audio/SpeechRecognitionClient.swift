@@ -1,12 +1,15 @@
 import AVFoundation
 import Dependencies
+import DependenciesMacros
 import Foundation
 
-struct SpeechRecognitionClient {
+@DependencyClient
+struct SpeechRecognitionClient: Sendable {
+    @DependencyEndpoint
     var startRecognition:
-        @Sendable (AsyncStream<(AVAudioPCMBuffer, AVAudioTime)>, Locale) async -> AsyncStream<
-            TranscriptionResult
-        >
+        @Sendable (_ audioStream: AsyncStream<(AVAudioPCMBuffer, AVAudioTime)>, _ locale: Locale)
+            async -> AsyncStream<TranscriptionResult> = { _, _ in AsyncStream { $0.finish() } }
+    @DependencyEndpoint
     var stopRecognition: @Sendable () async -> Void
 }
 
@@ -26,26 +29,5 @@ extension SpeechRecognitionClient: DependencyKey {
         stopRecognition: {
             await SpeechRecognitionService.shared.stopRecognition()
         }
-    )
-
-    static let testValue = SpeechRecognitionClient(
-        startRecognition: { _, _ in
-            AsyncStream { continuation in
-                continuation.yield(TranscriptionResult(text: "Test Transcription", isFinal: true))
-                continuation.finish()
-            }
-        },
-        stopRecognition: {}
-    )
-
-    static let previewValue = SpeechRecognitionClient(
-        startRecognition: { _, _ in
-            AsyncStream { continuation in
-                continuation.yield(
-                    TranscriptionResult(text: "Preview Transcription", isFinal: false))
-                continuation.finish()
-            }
-        },
-        stopRecognition: {}
     )
 }

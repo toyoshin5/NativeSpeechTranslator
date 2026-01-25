@@ -24,6 +24,8 @@ targets:
     dependencies:
       - package: SwiftDependencies
         product: Dependencies
+      - package: SwiftDependencies
+        product: DependenciesMacros
     entitlements:
         path: NativeSpeechTranslator/NativeSpeechTranslator.entitlements
   NativeSpeechTranslatorTests:
@@ -36,6 +38,8 @@ targets:
       - target: NativeSpeechTranslator
       - package: SwiftDependencies
         product: Dependencies
+      - package: SwiftDependencies
+        product: DependenciesMacros
     settings:
       base:
         GENERATE_INFOPLIST_FILE: YES

@@ -2,7 +2,7 @@ import Dependencies
 import Foundation
 
 struct OpenAICompatibleService {
-    @Dependency(\.httpClient) var httpClient: any HTTPClient
+    @Dependency(\.httpClient) var httpClient: HTTPClient
     
     init() {}
     
@@ -56,7 +56,7 @@ struct OpenAICompatibleService {
         do {
             urlRequest.httpBody = try JSONEncoder().encode(request)
             // Use injected httpClient
-            let (data, _) = try await httpClient.data(for: urlRequest)
+            let (data, _) = try await httpClient.data(request: urlRequest)
             let response = try JSONDecoder().decode(Response.self, from: data)
             let result =
                 response.choices.first?.message.content.trimmingCharacters(
@@ -89,7 +89,7 @@ struct OpenAICompatibleService {
         do {
             urlRequest.httpBody = try JSONEncoder().encode(request)
             // Use injected httpClient
-            let (data, response) = try await httpClient.data(for: urlRequest)
+            let (data, response) = try await httpClient.data(request: urlRequest)
 
             if let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode != 200 {
                 let errorMessage = String(data: data, encoding: .utf8) ?? "Unknown error"

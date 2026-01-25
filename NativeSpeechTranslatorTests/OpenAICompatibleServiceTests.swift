@@ -25,7 +25,7 @@ struct OpenAICompatibleServiceTests {
         let mockData = expectedResponse.data(using: .utf8)!
 
         let service = withDependencies {
-            $0.httpClient = MockHTTPClient { request in
+            $0.httpClient.data = { request in
                 // Verify Request
                 #expect(request.url?.absoluteString == "https://api.openai.com/v1/chat/completions")
                 #expect(request.httpMethod == "POST")
@@ -64,8 +64,8 @@ struct OpenAICompatibleServiceTests {
     func testEmptyAPIKeyReturnsDirectTranslation() async {
         // Given
         let service = withDependencies {
-            $0.httpClient = MockHTTPClient { _ in
-                // Should not actally be called
+            $0.httpClient.data = { _ in
+                // Should not actually be called
                 (Data(), URLResponse())
             }
         } operation: {
@@ -91,7 +91,7 @@ struct OpenAICompatibleServiceTests {
     func testNetworkErrorReturnsDirectTranslation() async {
         // Given
         let service = withDependencies {
-            $0.httpClient = MockHTTPClient { _ in
+            $0.httpClient.data = { _ in
                 throw URLError(.notConnectedToInternet)
             }
         } operation: {
@@ -130,12 +130,16 @@ struct OpenAICompatibleServiceTests {
         let mockData = expectedResponse.data(using: .utf8)!
         
         let service = withDependencies {
-             $0.httpClient = MockHTTPClient { request in
-                 return (mockData, HTTPURLResponse(url: request.url!, statusCode: 200, httpVersion: nil, headerFields: nil)!)
-             }
-         } operation: {
-             OpenAICompatibleService()
-         }
+            $0.httpClient.data = { request in
+                return (
+                    mockData,
+                    HTTPURLResponse(
+                        url: request.url!, statusCode: 200, httpVersion: nil, headerFields: nil)!
+                )
+            }
+        } operation: {
+            OpenAICompatibleService()
+        }
         
         // When
         let result = await service.testConnection(
@@ -155,12 +159,16 @@ struct OpenAICompatibleServiceTests {
         let mockData = errorResponse.data(using: .utf8)!
         
         let service = withDependencies {
-             $0.httpClient = MockHTTPClient { request in
-                 return (mockData, HTTPURLResponse(url: request.url!, statusCode: 401, httpVersion: nil, headerFields: nil)!)
-             }
-         } operation: {
-             OpenAICompatibleService()
-         }
+            $0.httpClient.data = { request in
+                return (
+                    mockData,
+                    HTTPURLResponse(
+                        url: request.url!, statusCode: 401, httpVersion: nil, headerFields: nil)!
+                )
+            }
+        } operation: {
+            OpenAICompatibleService()
+        }
         
         // When
         let result = await service.testConnection(
@@ -183,3 +191,4 @@ struct OpenAICompatibleServiceTests {
         }
     }
 }
+

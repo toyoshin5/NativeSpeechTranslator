@@ -1,19 +1,32 @@
 import AVFoundation
 import Dependencies
+import DependenciesMacros
 
 struct AudioDevice: Equatable, Identifiable, Sendable {
     let id: String
     let name: String
 }
 
-struct AudioCaptureClient {
-    var setInputDevice: @Sendable (String?) async -> Void
+@DependencyClient
+struct AudioCaptureClient: Sendable {
+    @DependencyEndpoint
+    var setInputDevice: @Sendable (_ deviceID: String?) async -> Void
+    @DependencyEndpoint
     var startStream: @Sendable () async throws -> AsyncStream<(AVAudioPCMBuffer, AVAudioTime)>
+    @DependencyEndpoint
     var stopStream: @Sendable () async -> Void
-    var startLevelMonitoring: @Sendable () async -> AsyncStream<Float>
-    var startLevelMonitoringOnly: @Sendable () async -> AsyncStream<Float>
+    @DependencyEndpoint
+    var startLevelMonitoring: @Sendable () async -> AsyncStream<Float> = {
+        AsyncStream { $0.finish() }
+    }
+    @DependencyEndpoint
+    var startLevelMonitoringOnly: @Sendable () async -> AsyncStream<Float> = {
+        AsyncStream { $0.finish() }
+    }
+    @DependencyEndpoint
     var stopLevelMonitoringOnly: @Sendable () async -> Void
-    var getAvailableDevices: @Sendable () -> [AudioDevice]
+    @DependencyEndpoint
+    var getAvailableDevices: @Sendable () -> [AudioDevice] = { [] }
 }
 
 extension DependencyValues {
@@ -48,53 +61,5 @@ extension AudioCaptureClient: DependencyKey {
                 AudioDevice(id: device.uniqueID, name: device.localizedName)
             }
         }
-    )
-
-    static let testValue = AudioCaptureClient(
-        setInputDevice: { _ in },
-        startStream: {
-            AsyncStream { continuation in
-                continuation.finish()
-            }
-        },
-        stopStream: {},
-        startLevelMonitoring: {
-            AsyncStream { continuation in
-                continuation.yield(0.5)
-                continuation.finish()
-            }
-        },
-        startLevelMonitoringOnly: {
-            AsyncStream { continuation in
-                continuation.yield(0.1)
-                continuation.finish()
-            }
-        },
-        stopLevelMonitoringOnly: {},
-        getAvailableDevices: { [] }
-    )
-
-    static let previewValue = AudioCaptureClient(
-        setInputDevice: { _ in },
-        startStream: {
-            AsyncStream { continuation in
-                continuation.finish()
-            }
-        },
-        stopStream: {},
-        startLevelMonitoring: {
-            AsyncStream { continuation in
-                continuation.yield(0.5)
-                continuation.finish()
-            }
-        },
-        startLevelMonitoringOnly: {
-            AsyncStream { continuation in
-                continuation.yield(0.1)
-                continuation.finish()
-            }
-        },
-        stopLevelMonitoringOnly: {},
-        getAvailableDevices: { [] }
     )
 }

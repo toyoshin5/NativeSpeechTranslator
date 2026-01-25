@@ -1,32 +1,25 @@
 import Dependencies
+import DependenciesMacros
 import Foundation
 
-public protocol HTTPClient {
-    func data(for request: URLRequest) async throws -> (Data, URLResponse)
+@DependencyClient
+public struct HTTPClient: Sendable {
+    @DependencyEndpoint
+    public var data: @Sendable (_ request: URLRequest) async throws -> (Data, URLResponse)
 }
 
-extension URLSession: HTTPClient {}
-
-private enum HTTPClientKey: DependencyKey {
-    static let liveValue: any HTTPClient = URLSession.shared
-    static let testValue: any HTTPClient = MockHTTPClient()
+extension HTTPClient: DependencyKey {
+    public static let liveValue = HTTPClient(
+        data: { request in
+            try await URLSession.shared.data(for: request)
+        }
+    )
 }
 
 extension DependencyValues {
-    public var httpClient: any HTTPClient {
-        get { self[HTTPClientKey.self] }
-        set { self[HTTPClientKey.self] = newValue }
+    public var httpClient: HTTPClient {
+        get { self[HTTPClient.self] }
+        set { self[HTTPClient.self] = newValue }
     }
 }
 
-public struct MockHTTPClient: HTTPClient {
-    public var callback: (URLRequest) async throws -> (Data, URLResponse)
-
-    public init(callback: @escaping (URLRequest) async throws -> (Data, URLResponse) = { _ in (Data(), URLResponse()) }) {
-        self.callback = callback
-    }
-
-    public func data(for request: URLRequest) async throws -> (Data, URLResponse) {
-        try await callback(request)
-    }
-}
