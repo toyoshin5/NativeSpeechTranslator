@@ -52,6 +52,8 @@ xcodegen generate
 xcodebuild -scheme NativeSpeechTranslator -destination 'platform=macOS' build
 ```
 
-## 対応翻訳言語
+### xcode-build-server
 
-- 
+```bash
+xcode-build-server config -project *.xcodeproj -scheme NativeSpeechTranslator
+```

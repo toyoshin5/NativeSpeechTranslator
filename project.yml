@@ -45,6 +45,7 @@ schemes:
     build:
       targets:
         NativeSpeechTranslator: all
+        NativeSpeechTranslatorTests: all
     run:
       config: Debug
     test:
