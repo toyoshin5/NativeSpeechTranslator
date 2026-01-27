@@ -283,6 +283,7 @@ class HomeViewModel: ObservableObject {
 
             if index < transcripts.count {
                 transcripts[index].translation = translation
+                updateOverlay(with: translation, original: text)
 
                 if isFinal {
                     let llmEnabled = UserDefaults.standard.bool(forKey: "llmTranslationEnabled")
@@ -298,9 +299,35 @@ class HomeViewModel: ObservableObject {
                             text, translation, sourceName, targetName)
                         if index < transcripts.count {
                             transcripts[index].translation = refined
+                            updateOverlay(with: refined, original: text)
                         }
                     }
                 }
+            }
+        }
+    }
+
+    // MARK: - Overlay Management
+
+    @Published var isOverlayEnabled: Bool = false {
+        didSet {
+            if isOverlayEnabled {
+                OverlayService.shared.show()
+                // Update with latest if available
+                if let last = transcripts.last, let translation = last.translation {
+                    OverlayService.shared.updateText(translation)
+                }
+            } else {
+                OverlayService.shared.hide()
+            }
+        }
+    }
+
+    // Helper to update overlay
+    func updateOverlay(with text: String, original: String = "") {
+        if isOverlayEnabled {
+            Task { @MainActor in
+                OverlayService.shared.updateText(text, original: original)
             }
         }
     }

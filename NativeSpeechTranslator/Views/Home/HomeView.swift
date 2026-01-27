@@ -60,6 +60,11 @@ struct HomeView: View {
                         .foregroundStyle(.secondary)
                 }
                 .padding(.leading, 16)
+                
+                Toggle("", isOn: $viewModel.isOverlayEnabled)
+                    .toggleStyle(.switch)
+                    .help("翻訳オーバーレイを表示")
+                    .padding(.leading, 16)
 
                 Spacer()
             }
