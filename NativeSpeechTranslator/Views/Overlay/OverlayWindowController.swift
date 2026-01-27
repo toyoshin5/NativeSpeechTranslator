@@ -48,19 +48,16 @@ class OverlayWindowController: NSWindowController {
     private func setupContentView() {
         guard let window = self.window else { return }
 
-        // Pass the persistent viewModel to the view
         let rootView = OverlayView(viewModel: self.viewModel)
         let hostingController = NSHostingController(rootView: rootView)
         hostingController.view.layer?.backgroundColor = NSColor.clear.cgColor
 
-        // Ensure the view expands to fit the content
-        hostingController.sizingOptions = [.minSize, .preferredContentSize]
+        hostingController.sizingOptions = [.preferredContentSize]
 
         window.contentViewController = hostingController
     }
 
     func updateText(_ text: String, original: String) {
-        // Update the view model, which will trigger SwiftUI update without replacing controller
         Task { @MainActor in
             self.viewModel.text = text
             self.viewModel.originalText = original
