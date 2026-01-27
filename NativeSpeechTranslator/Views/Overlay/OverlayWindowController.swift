@@ -40,9 +40,6 @@ class OverlayWindowController: NSWindowController {
         window.hasShadow = false
         window.isFloatingPanel = true
 
-        // Initial setup
-        _ = OverlayView(viewModel: OverlayViewModel())
-
         self.init(window: window)
 
         self.setupContentView()
