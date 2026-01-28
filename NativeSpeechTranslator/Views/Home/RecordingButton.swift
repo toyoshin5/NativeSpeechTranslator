@@ -5,14 +5,9 @@ struct RecordingButton: View {
     var action: () -> Void
 
     @State private var buttonScale: CGFloat = 1.0
-    @Namespace private var animationNamespace
 
     var body: some View {
-        Button(action: {
-            withAnimation(.smooth(duration: 0.3)) {
-                action()
-            }
-        }) {
+        Button(action: action) {
             HStack(spacing: 0) {
                 ZStack {
                     if isRecording {
@@ -21,12 +16,10 @@ struct RecordingButton: View {
                             .foregroundColor(.white)
                             .padding(8)
                             .background(Circle().fill(Color.red))
-                            .matchedGeometryEffect(id: "icon", in: animationNamespace)
                     } else {
                         Image(systemName: "mic.fill")
                             .font(.title2)
                             .foregroundColor(.primary)
-                            .matchedGeometryEffect(id: "icon", in: animationNamespace)
                     }
                 }
                 .frame(width: 52, height: 50)
@@ -35,10 +28,9 @@ struct RecordingButton: View {
                     Text("聞き取り中")
                         .font(.headline)
                         .foregroundColor(.red)
-                        .transition(.opacity.combined(with: .move(edge: .leading)))
-                        .padding(.trailing, 16)
-                        .lineLimit(1)
-                        .fixedSize()
+                        .padding(.trailing, 12)
+                        .transition(
+                            .scale.combined(with: .opacity).combined(with: .move(edge: .leading)))
                 }
             }
             .background {
@@ -52,8 +44,8 @@ struct RecordingButton: View {
                                     ? Color.red.opacity(0.5) : Color(NSColor.separatorColor),
                                 lineWidth: 1)
                     )
-                    .frame(height: 52)
             }
+            .animation(.smooth(duration: 0.3), value: isRecording)
             .scaleEffect(buttonScale)
         }
         .buttonStyle(.plain)
