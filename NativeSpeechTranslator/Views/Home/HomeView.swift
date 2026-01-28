@@ -157,7 +157,7 @@ struct HomeView: View {
                     let content = LogExporter.export(transcripts: viewModel.transcripts)
                     exportDocument = TranscriptDocument(content: content)
                     isExporting = true
-                }
+                }.buttonStyle(.borderedProminent)
             }
             .padding()
             .background(Color(NSColor.windowBackgroundColor))
@@ -199,4 +199,5 @@ struct HomeView: View {
 
 #Preview {
     HomeView()
+        .tint(.red)
 }
