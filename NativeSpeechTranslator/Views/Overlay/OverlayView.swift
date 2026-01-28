@@ -13,7 +13,7 @@ struct OverlayView: View {
                     .shadow(color: .black, radius: 2, x: -1, y: -1)
             }
 
-            Text(viewModel.text.isEmpty ? "Waiting for translation..." : viewModel.text)
+            Text(viewModel.text.isEmpty ? "Waiting for translation." : viewModel.text)
                 .font(.system(size: 32, weight: .bold, design: .rounded))
                 .foregroundColor(.white)
                 .shadow(color: .black, radius: 2, x: 1, y: 1)

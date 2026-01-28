@@ -14,6 +14,7 @@ struct NativeSpeechTranslatorApp: App {
     var body: some Scene {
         WindowGroup {
             HomeView()
+                .tint(.red)
                 .background {
                     TranslationHostView()
                 }

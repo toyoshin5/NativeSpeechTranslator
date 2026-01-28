@@ -65,7 +65,6 @@ struct HomeView: View {
                     .toggleStyle(.switch)
                     .help("翻訳オーバーレイを表示")
                     .padding(.leading, 16)
-
                 Spacer()
             }
             .padding()
@@ -110,7 +109,7 @@ struct HomeView: View {
                 .buttonStyle(.plain)
                 .frame(width: 44, height: 44)
                 .glassEffect(.clear.interactive())
-                .foregroundStyle(isAutoScrollEnabled ? .blue : .secondary)
+                .foregroundStyle(isAutoScrollEnabled ? .red : .secondary)
                 .padding()
 
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomTrailing)
@@ -150,12 +149,11 @@ struct HomeView: View {
 
                 Spacer()
 
-                Button("ログを消去") {
+                Button("ログ消去") {
                     viewModel.clearTranscripts()
                 }
-                .foregroundColor(.red)
 
-                Button("ログを保存") {
+                Button("ログ保存") {
                     let content = LogExporter.export(transcripts: viewModel.transcripts)
                     exportDocument = TranscriptDocument(content: content)
                     isExporting = true
