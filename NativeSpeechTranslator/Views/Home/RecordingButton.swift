@@ -33,6 +33,7 @@ struct RecordingButton: View {
                             .scale.combined(with: .opacity).combined(with: .move(edge: .leading)))
                 }
             }
+            .contentShape(Capsule())
             .glassEffect(.clear.interactive())
             .overlay(
                 Capsule()

@@ -71,10 +71,11 @@ struct HomeView: View {
                     }) {
                         Image(systemName: "arrow.down.to.line")
                             .font(.title)
+                            .frame(width: 44, height: 44)
+                            .contentShape(Circle())
+                            .glassEffect(.clear.interactive())
                     }
                     .buttonStyle(.plain)
-                    .frame(width: 44, height: 44)
-                    .glassEffect(.clear.interactive())
                     .foregroundStyle(isAutoScrollEnabled ? .red : .secondary)
                     .padding()
                 }
