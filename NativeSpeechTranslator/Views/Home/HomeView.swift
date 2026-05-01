@@ -197,6 +197,8 @@ struct HomeView: View {
                     .help("ログ保存")
                 }
             }
+            .navigationTitle("Translator")
+            .navigationSubtitle("Native Speech Translator")
         }
         .fileExporter(
             isPresented: $isExporting,
