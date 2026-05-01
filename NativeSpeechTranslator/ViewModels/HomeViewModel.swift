@@ -11,6 +11,7 @@ class HomeViewModel: ObservableObject {
         var original: String
         var translation: String?
         var isFinal: Bool = false
+        var isLLMRefined: Bool = false
     }
 
     @Published var transcripts: [TranscriptItem] = []
@@ -299,6 +300,7 @@ class HomeViewModel: ObservableObject {
                             text, translation, sourceName, targetName)
                         if index < transcripts.count {
                             transcripts[index].translation = refined
+                            transcripts[index].isLLMRefined = true
                             updateOverlay(with: refined, original: text)
                         }
                     }

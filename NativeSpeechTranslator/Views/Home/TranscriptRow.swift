@@ -10,6 +10,9 @@ struct TranscriptRow: View {
 
     let fontSize: CGFloat
 
+    /// LLM翻訳が有効で、まだ翻訳が完了していない場合はtrue
+    var isWaitingForLLM: Bool = false
+
     var body: some View {
         HStack(alignment: .top, spacing: 16) {
             // 原文（左側）
@@ -27,7 +30,7 @@ struct TranscriptRow: View {
                     Text(translation)
                         .textSelection(.enabled)
                         .font(.system(size: fontSize))
-                        .foregroundColor(.secondary)
+                        .foregroundColor(isWaitingForLLM ? .secondary : .primary)
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)

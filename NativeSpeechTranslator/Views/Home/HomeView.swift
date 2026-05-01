@@ -35,6 +35,7 @@ struct HomeView: View {
 
     @AppStorage("sourceLanguage") private var sourceLanguage: String = "en-US"
     @AppStorage("targetLanguage") private var targetLanguage: String = "ja-JP"
+    @AppStorage("llmTranslationEnabled") private var llmTranslationEnabled: Bool = false
 
     var body: some View {
         NavigationStack {
@@ -84,7 +85,8 @@ struct HomeView: View {
                     TranscriptRow(
                         original: item.original,
                         translation: item.translation,
-                        fontSize: fontSize
+                        fontSize: fontSize,
+                        isWaitingForLLM: llmTranslationEnabled && !item.isLLMRefined
                     )
                     .padding(.horizontal)
                     Divider()

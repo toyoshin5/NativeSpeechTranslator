@@ -32,7 +32,7 @@ struct AutoScrollView<Content: View, Item: Identifiable>: View {
                         content(item)
                     }
                     Color.clear
-                        .frame(height: 60)
+                        .frame(height: 120)
                         .id("bottom-anchor")
                 }
             }
