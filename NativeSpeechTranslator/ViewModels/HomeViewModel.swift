@@ -178,6 +178,7 @@ class HomeViewModel: ObservableObject {
     }
 
     func handleSourceLanguageChangeTask() async {
+        await translationClient.refreshLanguages()
         await checkTranslationModelStatus()
         if isRecording {
             await restartRecordingTask()
@@ -191,6 +192,7 @@ class HomeViewModel: ObservableObject {
     }
 
     func handleTargetLanguageChangeTask() async {
+        await translationClient.refreshLanguages()
         await checkTranslationModelStatus()
     }
 
