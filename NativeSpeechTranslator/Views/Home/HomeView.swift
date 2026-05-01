@@ -40,15 +40,39 @@ struct HomeView: View {
         NavigationStack {
             VStack(spacing: 0) {
                 HStack(spacing: 0) {
-                    Text(viewModel.getDisplayLanguageName(for: sourceLanguage))
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .padding(.leading, 16)
-                        .bold()
-                    Divider()
-                    Text(viewModel.getDisplayLanguageName(for: targetLanguage))
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .padding(.leading, 16)
-                        .bold()
+                    Picker(selection: $sourceLanguage) {
+                        ForEach(SupportedLanguage.allCases) { lang in
+                            Text(lang.displayName).tag(lang.rawValue)
+                        }
+                    } label: {
+                        EmptyView()
+                    }
+                    .labelsHidden()
+                    .frame(maxWidth: .infinity)
+                    .onChange(of: sourceLanguage) { oldValue, newValue in
+                        if newValue == targetLanguage {
+                            targetLanguage = oldValue
+                        }
+                    }
+
+                    Image(systemName: "chevron.forward")
+                        .foregroundStyle(.secondary)
+                        .padding(.horizontal, 4)
+
+                    Picker(selection: $targetLanguage) {
+                        ForEach(SupportedLanguage.allCases) { lang in
+                            Text(lang.displayName).tag(lang.rawValue)
+                        }
+                    } label: {
+                        EmptyView()
+                    }
+                    .labelsHidden()
+                    .frame(maxWidth: .infinity)
+                    .onChange(of: targetLanguage) { oldValue, newValue in
+                        if newValue == sourceLanguage {
+                            sourceLanguage = oldValue
+                        }
+                    }
                 }
                 .frame(height: 32)
 
@@ -145,7 +169,7 @@ struct HomeView: View {
                     .help("文字を大きく")
                 }
 
-                ToolbarItem(placement: .automatic) {
+                ToolbarItem(placement: .primaryAction) {
                     Toggle(isOn: $viewModel.isOverlayEnabled) {
                         Label("翻訳オーバーレイを表示", systemImage: "rectangle.inset.filled.on.rectangle")
                     }
