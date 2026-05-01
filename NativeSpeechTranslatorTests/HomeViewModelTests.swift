@@ -66,6 +66,10 @@ struct HomeViewModelTests {
     func testSpeechRecognitionResultReflected() async {
         // Given
         let transcriptionText = "こんにちは"
+        let originalLLMSetting = UserDefaults.standard.bool(forKey: "llmTranslationEnabled")
+        UserDefaults.standard.set(false, forKey: "llmTranslationEnabled")
+        defer { UserDefaults.standard.set(originalLLMSetting, forKey: "llmTranslationEnabled") }
+
         let model = withDependencies {
             $0.audioCaptureClient.getAvailableDevices = { [] }
             $0.audioCaptureClient.startLevelMonitoringOnly = { AsyncStream { $0.finish() } }
@@ -95,7 +99,6 @@ struct HomeViewModelTests {
         #expect(model.transcripts.count == 1)
         #expect(model.transcripts.first?.original == transcriptionText)
         #expect(model.transcripts.first?.translation == "Hello")
-
         await model.stopRecordingTask()
     }
 
