@@ -100,6 +100,7 @@ struct OpenAICompatibleService {
             _ = try JSONDecoder().decode(Response.self, from: data)
             return .success(())
         } catch {
+            print("[LLM] Test connection error: \(error)")
             return .failure(error)
         }
     }

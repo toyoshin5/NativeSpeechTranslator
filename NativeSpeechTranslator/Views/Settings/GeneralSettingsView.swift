@@ -12,7 +12,9 @@ struct GeneralSettingsView: View {
     @AppStorage("llmModel") private var llmModel: String = "default"
     @AppStorage("openaiAPIKey") private var openaiAPIKey: String = ""
     @AppStorage("groqAPIKey") private var groqAPIKey: String = ""
-    @AppStorage("cerebrasAPIKey") private var cerebrasAPIKey: String = ""
+    @AppStorage("customAPIKey") private var customAPIKey: String = ""
+    @AppStorage("customBaseURL") private var customBaseURL: String = ""
+    @AppStorage("customModel") private var customModel: String = ""
 
     @State private var connectionTestResult: ConnectionTestResult?
     @State private var isTestingConnection = false
@@ -25,9 +27,16 @@ struct GeneralSettingsView: View {
         switch llmProvider {
         case .openai: return openaiAPIKey
         case .groq: return groqAPIKey
-        case .cerebras: return cerebrasAPIKey
+        case .custom: return customAPIKey
         case .foundation: return ""
         }
+    }
+
+    private var currentModel: String {
+        if llmProvider == .custom {
+            return customModel
+        }
+        return llmModel
     }
 
     private var providerBinding: Binding<String> {
@@ -140,7 +149,50 @@ struct GeneralSettingsView: View {
                 }
             }
 
-            if llmTranslationEnabled && llmProvider.requiresAPIKey {
+            if llmTranslationEnabled && llmProvider == .custom {
+                Section("カスタム設定") {
+                    TextField("Base URL", text: $customBaseURL)
+                        .textFieldStyle(.roundedBorder)
+                        .onChange(of: customBaseURL) { _, _ in connectionTestResult = nil }
+
+                    TextField("モデル名", text: $customModel)
+                        .textFieldStyle(.roundedBorder)
+                        .onChange(of: customModel) { _, _ in connectionTestResult = nil }
+
+                    HStack {
+                        SecureField("API Key", text: $customAPIKey)
+                            .textFieldStyle(.roundedBorder)
+                            .onChange(of: customAPIKey) { _, _ in connectionTestResult = nil }
+
+                        Button(action: testConnection) {
+                            if isTestingConnection {
+                                ProgressView()
+                                    .controlSize(.small)
+                            } else {
+                                Text("確認")
+                            }
+                        }
+                        .disabled(
+                            customAPIKey.isEmpty || customBaseURL.isEmpty || customModel.isEmpty
+                                || isTestingConnection)
+                    }
+
+                    if let result = connectionTestResult {
+                        HStack {
+                            switch result {
+                            case .success:
+                                Label("接続成功", systemImage: "checkmark.circle.fill")
+                                    .foregroundStyle(.green)
+                            case .failure(let message):
+                                Label(message, systemImage: "xmark.circle.fill")
+                                    .foregroundStyle(.red)
+                            }
+                        }
+                    }
+                }
+            }
+
+            if llmTranslationEnabled && llmProvider.requiresAPIKey && llmProvider != .custom {
                 Section("APIキー") {
                     HStack {
                         switch llmProvider {
@@ -152,11 +204,7 @@ struct GeneralSettingsView: View {
                             SecureField("Groq API Key", text: $groqAPIKey)
                                 .textFieldStyle(.roundedBorder)
                                 .onChange(of: groqAPIKey) { _, _ in connectionTestResult = nil }
-                        case .cerebras:
-                            SecureField("Cerebras API Key", text: $cerebrasAPIKey)
-                                .textFieldStyle(.roundedBorder)
-                                .onChange(of: cerebrasAPIKey) { _, _ in connectionTestResult = nil }
-                        case .foundation:
+                        default:
                             EmptyView()
                         }
 
@@ -197,7 +245,7 @@ struct GeneralSettingsView: View {
         Task {
             let result = await TranslationLLMService.testConnection(
                 provider: llmProvider,
-                model: llmModel,
+                model: currentModel,
                 apiKey: currentAPIKey
             )
 

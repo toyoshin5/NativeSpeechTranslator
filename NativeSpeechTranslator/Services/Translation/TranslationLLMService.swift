@@ -38,15 +38,19 @@ actor TranslationLLMService {
                     apiKey: UserDefaults.standard.string(forKey: "groqAPIKey") ?? "",
                     baseURL: "https://api.groq.com/openai/v1/chat/completions"
                 )
-            case .cerebras:
+            case .custom:
+                let customModel =
+                    UserDefaults.standard.string(forKey: "customModel") ?? ""
+                let customBaseURL =
+                    UserDefaults.standard.string(forKey: "customBaseURL") ?? ""
                 return await OpenAICompatibleService().translate(
                     original: original,
                     direct: direct,
                     sourceLanguage: sourceLanguage,
                     targetLanguage: targetLanguage,
-                    model: model,
-                    apiKey: UserDefaults.standard.string(forKey: "cerebrasAPIKey") ?? "",
-                    baseURL: "https://api.cerebras.ai/v1/chat/completions"
+                    model: customModel,
+                    apiKey: UserDefaults.standard.string(forKey: "customAPIKey") ?? "",
+                    baseURL: customBaseURL
                 )
             case .foundation:
                 return await FoundationModelService.shared.refine(
@@ -84,11 +88,13 @@ actor TranslationLLMService {
                 apiKey: apiKey,
                 baseURL: "https://api.groq.com/openai/v1/chat/completions"
             )
-        case .cerebras:
+        case .custom:
+            let customBaseURL =
+                UserDefaults.standard.string(forKey: "customBaseURL") ?? ""
             return await OpenAICompatibleService().testConnection(
                 model: model,
                 apiKey: apiKey,
-                baseURL: "https://api.cerebras.ai/v1/chat/completions"
+                baseURL: customBaseURL
             )
         case .foundation:
             return .success(())
