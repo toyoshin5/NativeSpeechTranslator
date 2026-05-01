@@ -1,9 +1,9 @@
 # Native Speech Translator
 
-<img width="1011" height="743" alt=" 2026-01-08 1 54 58" src="https://github.com/user-attachments/assets/f6052738-27e7-47a9-aa0d-7ece4dfa5a41" />
+<img width="1011" alt=" 2026-01-08 1 54 58" src="https://github.com/user-attachments/assets/f6052738-27e7-47a9-aa0d-7ece4dfa5a41" />
 
 
-<img width="937" height="290" alt="Image" src="https://github.com/user-attachments/assets/441935d9-35c1-4f76-bd02-05c7d8fd3d5c" />
+<img width="937" alt="Image" src="https://github.com/user-attachments/assets/441935d9-35c1-4f76-bd02-05c7d8fd3d5c" />
 
 macOS Tahoe以降で動作するオフラインのリアルタイム音声認識 & 翻訳ツール
 
