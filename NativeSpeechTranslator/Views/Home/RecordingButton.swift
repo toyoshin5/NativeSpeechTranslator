@@ -33,18 +33,13 @@ struct RecordingButton: View {
                             .scale.combined(with: .opacity).combined(with: .move(edge: .leading)))
                 }
             }
-            .background {
+            .glassEffect(.clear.interactive())
+            .overlay(
                 Capsule()
-                    .fill(Color(NSColor.controlBackgroundColor))
-                    .shadow(color: .black.opacity(0.15), radius: 4, x: 0, y: 2)
-                    .overlay(
-                        Capsule()
-                            .stroke(
-                                isRecording
-                                    ? Color.red.opacity(0.5) : Color(NSColor.separatorColor),
-                                lineWidth: 1)
-                    )
-            }
+                    .stroke(
+                        isRecording ? Color.red.opacity(0.5) : .clear,
+                        lineWidth: 1)
+            )
             .animation(.smooth(duration: 0.3), value: isRecording)
             .scaleEffect(buttonScale)
         }

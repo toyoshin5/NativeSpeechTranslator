@@ -37,88 +37,48 @@ struct HomeView: View {
     @AppStorage("targetLanguage") private var targetLanguage: String = "ja-JP"
 
     var body: some View {
-        VStack(spacing: 0) {
-            HStack {
-                Picker("入力デバイス", selection: $viewModel.selectedDeviceID) {
-                    ForEach(viewModel.inputDevices, id: \.id) { device in
-                        Text(device.name).tag(device.id)
+        NavigationStack {
+            VStack(spacing: 0) {
+                HStack(spacing: 0) {
+                    Text(viewModel.getDisplayLanguageName(for: sourceLanguage))
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(.leading, 16)
+                        .bold()
+                    Divider()
+                    Text(viewModel.getDisplayLanguageName(for: targetLanguage))
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(.leading, 16)
+                        .bold()
+                }
+                .frame(height: 32)
+
+                Divider()
+
+                AutoScrollView(
+                    items: viewModel.transcripts, isAutoScrollEnabled: isAutoScrollEnabled
+                ) { item in
+                    TranscriptRow(
+                        original: item.original,
+                        translation: item.translation,
+                        fontSize: fontSize
+                    )
+                    .padding(.horizontal)
+                    Divider()
+                }
+                .overlay(alignment: .bottomTrailing) {
+                    Button(action: {
+                        isAutoScrollEnabled.toggle()
+                    }) {
+                        Image(systemName: "arrow.down.to.line")
+                            .font(.title)
                     }
+                    .buttonStyle(.plain)
+                    .frame(width: 44, height: 44)
+                    .glassEffect(.clear.interactive())
+                    .foregroundStyle(isAutoScrollEnabled ? .red : .secondary)
+                    .padding()
                 }
-                .pickerStyle(MenuPickerStyle())
-                .frame(width: 250)
 
-                AudioVisualizerView(level: viewModel.audioLevel)
-                    .frame(width: 80, height: 20)
-                    .padding(.leading, 8)
-
-                HStack(spacing: 8) {
-                    Image(systemName: "textformat.size.smaller")
-                        .foregroundStyle(.secondary)
-                    Slider(value: $fontSize, in: 10...40)
-                        .frame(width: 100)
-                    Image(systemName: "textformat.size.larger")
-                        .foregroundStyle(.secondary)
-                }
-                .padding(.leading, 16)
-                
-                Toggle("", isOn: $viewModel.isOverlayEnabled)
-                    .toggleStyle(.switch)
-                    .help("翻訳オーバーレイを表示")
-                    .padding(.leading, 16)
-                Spacer()
-            }
-            .padding()
-            .background(Color(NSColor.windowBackgroundColor))
-
-            Divider()
-
-            HStack(spacing: 0) {
-                Text(viewModel.getDisplayLanguageName(for: sourceLanguage))
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(.leading, 16)
-                    .bold()
-                Divider()
-                Text(viewModel.getDisplayLanguageName(for: targetLanguage))
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(.leading, 16)
-                    .bold()
-            }
-            .frame(height: 32)
-            .background(Color(NSColor.windowBackgroundColor))
-
-            Divider()
-
-            AutoScrollView(items: viewModel.transcripts, isAutoScrollEnabled: isAutoScrollEnabled) {
-                item in
-                TranscriptRow(
-                    original: item.original,
-                    translation: item.translation,
-                    fontSize: fontSize
-                )
-                .padding(.horizontal)
-                Divider()
-            }
-            .background(Color(NSColor.controlBackgroundColor))
-            .overlay {
-                Button(action: {
-                    isAutoScrollEnabled.toggle()
-                }) {
-                    Image(systemName: "arrow.down.to.line")
-                        .font(.title)
-                }
-                .buttonStyle(.plain)
-                .frame(width: 44, height: 44)
-                .glassEffect(.clear.interactive())
-                .foregroundStyle(isAutoScrollEnabled ? .red : .secondary)
-                .padding()
-
-                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomTrailing)
-
-            }
-
-            Divider()
-
-            VStack(spacing: 8) {
                 if !viewModel.isTranslationModelInstalled {
                     HStack {
                         Image(systemName: "exclamationmark.triangle.fill")
@@ -130,37 +90,83 @@ struct HomeView: View {
                         }
                         .buttonStyle(.link)
                     }
-                    .padding(.top, 8)
+                    .padding(.vertical, 8)
+                }
+            }
+            .overlay(alignment: .bottomLeading) {
+                HStack(spacing: 8) {
+                    RecordingButton(isRecording: viewModel.isRecording) {
+                        if viewModel.isRecording {
+                            viewModel.stopRecording()
+                        } else {
+                            viewModel.startRecording()
+                        }
+                    }
+                    .keyboardShortcut(.space, modifiers: [])
+                    .disabled(!viewModel.isTranslationModelInstalled)
+                    .opacity(viewModel.isTranslationModelInstalled ? 1.0 : 0.5)
+
+                }
+                .padding()
+            }
+            .toolbar {
+                ToolbarItem(placement: .status) {
+                    HStack{
+                        AudioVisualizerView(level: viewModel.audioLevel)
+                            .frame(width: 16, height: 24)
+                            .padding(.leading,12)
+                        Picker("入力デバイス", selection: $viewModel.selectedDeviceID) {
+                            ForEach(viewModel.inputDevices, id: \.id) { device in
+                                Text(device.name).tag(device.id)
+                            }
+
+                        }
+                        .padding(.trailing,8)
+                        .frame(width: 160)
+                    }
+
+
                 }
 
-            }
-
-            HStack {
-                RecordingButton(isRecording: viewModel.isRecording) {
-                    if viewModel.isRecording {
-                        viewModel.stopRecording()
-                    } else {
-                        viewModel.startRecording()
+                ToolbarItem(placement: .automatic) {
+                    HStack(spacing: 4) {
+                        Image(systemName: "textformat.size.smaller")
+                            .foregroundStyle(.secondary)
+                        Slider(value: $fontSize, in: 10...40)
+                            .frame(width: 80)
+                        Image(systemName: "textformat.size.larger")
+                            .foregroundStyle(.secondary)
                     }
                 }
-                .keyboardShortcut(.space, modifiers: [])
-                .disabled(!viewModel.isTranslationModelInstalled)
-                .opacity(viewModel.isTranslationModelInstalled ? 1.0 : 0.5)
 
-                Spacer()
-
-                Button("ログ消去") {
-                    viewModel.clearTranscripts()
+                ToolbarItem(placement: .automatic) {
+                    Toggle(isOn: $viewModel.isOverlayEnabled) {
+                        Image(systemName: "rectangle.inset.filled.on.rectangle")
+                    }
+                    .toggleStyle(.button)
+                    .help("翻訳オーバーレイを表示")
                 }
 
-                Button("ログ保存") {
-                    let content = LogExporter.export(transcripts: viewModel.transcripts)
-                    exportDocument = TranscriptDocument(content: content)
-                    isExporting = true
-                }.buttonStyle(.borderedProminent)
+                ToolbarItem(placement: .primaryAction) {
+                    Button(action: {
+                        viewModel.clearTranscripts()
+                    }) {
+                        Image(systemName: "trash")
+                    }
+                    .help("ログ消去")
+                }
+
+                ToolbarItem(placement: .primaryAction) {
+                    Button(action: {
+                        let content = LogExporter.export(transcripts: viewModel.transcripts)
+                        exportDocument = TranscriptDocument(content: content)
+                        isExporting = true
+                    }) {
+                        Image(systemName: "square.and.arrow.up")
+                    }
+                    .help("ログ保存")
+                }
             }
-            .padding()
-            .background(Color(NSColor.windowBackgroundColor))
         }
         .fileExporter(
             isPresented: $isExporting,
