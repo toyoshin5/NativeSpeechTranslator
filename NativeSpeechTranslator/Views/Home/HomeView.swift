@@ -129,20 +129,25 @@ struct HomeView: View {
 
                 }
 
-                ToolbarItem(placement: .automatic) {
-                    HStack(spacing: 4) {
-                        Image(systemName: "textformat.size.smaller")
-                            .foregroundStyle(.secondary)
-                        Slider(value: $fontSize, in: 10...40)
-                            .frame(width: 80)
-                        Image(systemName: "textformat.size.larger")
-                            .foregroundStyle(.secondary)
+                ToolbarItemGroup(placement: .status) {
+                    Button {
+                        fontSize = max(fontSize - 2, 10)
+                    } label: {
+                        Label("文字を小さく", systemImage: "textformat.size.smaller")
                     }
+                    .help("文字を小さく")
+
+                    Button {
+                        fontSize = min(fontSize + 2, 40)
+                    } label: {
+                        Label("文字を大きく", systemImage: "textformat.size.larger")
+                    }
+                    .help("文字を大きく")
                 }
 
                 ToolbarItem(placement: .automatic) {
                     Toggle(isOn: $viewModel.isOverlayEnabled) {
-                        Image(systemName: "rectangle.inset.filled.on.rectangle")
+                        Label("翻訳オーバーレイを表示", systemImage: "rectangle.inset.filled.on.rectangle")
                     }
                     .toggleStyle(.button)
                     .help("翻訳オーバーレイを表示")
@@ -152,9 +157,9 @@ struct HomeView: View {
                     Button(action: {
                         viewModel.clearTranscripts()
                     }) {
-                        Image(systemName: "trash")
+                        Label("ログを消去", systemImage: "trash")
                     }
-                    .help("ログ消去")
+                    .help("ログを消去")
                 }
 
                 ToolbarItem(placement: .primaryAction) {
@@ -163,7 +168,7 @@ struct HomeView: View {
                         exportDocument = TranscriptDocument(content: content)
                         isExporting = true
                     }) {
-                        Image(systemName: "square.and.arrow.up")
+                        Label("ログを保存", systemImage: "square.and.arrow.up")
                     }
                     .help("ログ保存")
                 }
