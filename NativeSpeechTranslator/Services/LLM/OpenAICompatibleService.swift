@@ -28,6 +28,39 @@ struct OpenAICompatibleService {
         }
     }
 
+    func chatCompletion(
+        systemPrompt: String, userMessage: String,
+        model: String, apiKey: String, baseURL: String
+    ) async throws -> String {
+        guard !apiKey.isEmpty else { throw LLMError.emptyAPIKey }
+        guard let url = URL(string: baseURL) else { throw LLMError.invalidURL }
+
+        let request = Request(
+            model: model,
+            messages: [
+                Request.Message(role: "system", content: systemPrompt),
+                Request.Message(role: "user", content: userMessage),
+            ]
+        )
+
+        var urlRequest = URLRequest(url: url)
+        urlRequest.httpMethod = "POST"
+        urlRequest.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
+        urlRequest.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        urlRequest.httpBody = try JSONEncoder().encode(request)
+
+        let (data, response) = try await httpClient.data(request: urlRequest)
+
+        if let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode != 200 {
+            let errorMessage = String(data: data, encoding: .utf8) ?? "Unknown error"
+            throw LLMError.apiError(statusCode: httpResponse.statusCode, message: errorMessage)
+        }
+
+        let decoded = try JSONDecoder().decode(Response.self, from: data)
+        return decoded.choices.first?.message.content.trimmingCharacters(
+            in: .whitespacesAndNewlines) ?? ""
+    }
+
     func translate(
         original: String, direct: String, sourceLanguage: String, targetLanguage: String,
         model: String, apiKey: String, baseURL: String

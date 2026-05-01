@@ -171,6 +171,19 @@ struct HomeView: View {
                     .help("文字を大きく")
                 }
 
+                if llmTranslationEnabled {
+                    ToolbarItem(placement: .primaryAction) {
+                        Button {
+                            let originals = viewModel.transcripts.map { $0.original }
+                            SummaryService.shared.showAndSummarize(transcripts: originals)
+                        } label: {
+                            Label("内容を要約", systemImage: "doc.text.magnifyingglass")
+                        }
+                        .help("内容を要約")
+                        .disabled(viewModel.transcripts.isEmpty)
+                    }
+                }
+
                 ToolbarItem(placement: .primaryAction) {
                     Toggle(isOn: $viewModel.isOverlayEnabled) {
                         Label("翻訳オーバーレイを表示", systemImage: "rectangle.inset.filled.on.rectangle")
