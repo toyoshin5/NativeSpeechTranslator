@@ -78,9 +78,6 @@ actor FoundationModelService {
         do {
             let response = try await session.respond(
                 to: TranslationPrompt.userPrompt(original: original, direct: direct))
-            print(
-                "[LLM] Foundation: '\(original.prefix(30))...' -> '\(response.content.prefix(30))...'"
-            )
             return response.content
         } catch {
             print("[LLM] Foundation Models error: \(error)")

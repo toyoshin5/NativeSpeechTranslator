@@ -94,8 +94,6 @@ struct OpenAICompatibleService {
             let result =
                 response.choices.first?.message.content.trimmingCharacters(
                     in: .whitespacesAndNewlines) ?? direct
-            print(
-                "[LLM] OpenAI Compatible: '\(original.prefix(30))...' -> '\(result.prefix(30))...'")
             return result
         } catch {
             print("[LLM] OpenAI Compatible API error: \(error)")
