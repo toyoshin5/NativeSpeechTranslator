@@ -53,7 +53,7 @@ mint run xcodegen
 ### 3. ビルド
 
 ```bash
-xcodebuild -scheme NativeSpeechTranslator -destination 'platform=macOS' build
+xcodebuild -scheme NativeSpeechTranslator -destination 'platform=macOS' -skipMacroValidation build
 ```
 
 ### xcode-build-server
